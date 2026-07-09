@@ -22,6 +22,12 @@ const defaultState = () => ({
     lastSession: null,
     masteredCount: 0,
   },
+  /** Guided path + habit tracking */
+  path: {
+    visitedStepIds: [],
+    studyDays: [],
+    lastActive: null,
+  },
   lastVisited: null,
 });
 
@@ -54,6 +60,12 @@ export function loadProgress() {
         ...parsed.learn,
         bank: { ...base.learn.bank, ...parsed.learn?.bank },
       },
+      path: {
+        ...base.path,
+        ...parsed.path,
+        visitedStepIds: parsed.path?.visitedStepIds || base.path.visitedStepIds,
+        studyDays: parsed.path?.studyDays || base.path.studyDays,
+      },
     };
   } catch {
     return base;
@@ -62,6 +74,42 @@ export function loadProgress() {
 
 export function saveProgress(state) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function todayKey() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+/** Stamp a study day + last active (habit tracking). */
+export function touchStudyActivity(state) {
+  const day = todayKey();
+  const days = new Set(state.path?.studyDays || []);
+  days.add(day);
+  state.path = {
+    visitedStepIds: state.path?.visitedStepIds || [],
+    studyDays: [...days].sort().slice(-120),
+    lastActive: new Date().toISOString(),
+  };
+  state.lastVisited = state.path.lastActive;
+  return state;
+}
+
+/** Mark path step(s) or page keys as visited (for soft goals like cheatsheets). */
+export function markPathVisit(...stepIds) {
+  const state = loadProgress();
+  const set = new Set(state.path?.visitedStepIds || []);
+  for (const id of stepIds) {
+    if (id) set.add(id);
+  }
+  state.path = {
+    ...(state.path || {}),
+    visitedStepIds: [...set],
+    studyDays: state.path?.studyDays || [],
+    lastActive: state.path?.lastActive || null,
+  };
+  touchStudyActivity(state);
+  saveProgress(state);
+  return state;
 }
 
 export function recordResult(slice, { correct }) {
@@ -78,7 +126,7 @@ export function recordResult(slice, { correct }) {
     s.streak = 0;
   }
   state[slice] = s;
-  state.lastVisited = new Date().toISOString();
+  touchStudyActivity(state);
   saveProgress(state);
   return state;
 }
@@ -96,7 +144,7 @@ export function recordQuizAnswer(domain, correct) {
     };
   }
   state.quiz = q;
-  state.lastVisited = new Date().toISOString();
+  touchStudyActivity(state);
   saveProgress(state);
   return state;
 }
@@ -153,7 +201,7 @@ export function recordLearnEvent(evt) {
     masteredCount,
     lastSession: state.learn?.lastSession ?? null,
   };
-  state.lastVisited = now;
+  touchStudyActivity(state);
   saveProgress(state);
   return state;
 }
@@ -177,7 +225,7 @@ export function recordStudySession(session) {
       at: new Date().toISOString(),
     },
   };
-  state.lastVisited = new Date().toISOString();
+  touchStudyActivity(state);
   saveProgress(state);
   return state;
 }
@@ -243,7 +291,7 @@ export function recordScenario(id, correct) {
   if (correct) set.add(id);
   s.completedIds = [...set];
   state.scenarios = s;
-  state.lastVisited = new Date().toISOString();
+  touchStudyActivity(state);
   saveProgress(state);
   return state;
 }
@@ -260,7 +308,7 @@ export function recordMockExam({ score, correct, total }) {
     ].slice(-20),
   };
   state.mock = mock;
-  state.lastVisited = new Date().toISOString();
+  touchStudyActivity(state);
   saveProgress(state);
   return state;
 }
@@ -278,7 +326,7 @@ export function recordSubnetTimed({ correct, total, seconds }) {
     subnet.timedBest = { score, correct, total, seconds, at: new Date().toISOString() };
   }
   state.subnet = subnet;
-  state.lastVisited = new Date().toISOString();
+  touchStudyActivity(state);
   saveProgress(state);
   return state;
 }

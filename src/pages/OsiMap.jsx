@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { OSI_LAYERS, OSI_QUIZ } from '../data/osi';
 import { shuffle } from '../lib/shuffle';
 import { loadProgress, recordResult, accuracy } from '../lib/progress';
+import { usePathVisit } from '../hooks/usePathVisit';
 
 export default function OsiMap() {
+  usePathVisit('osi');
   const [active, setActive] = useState(OSI_LAYERS[0]);
   const [quiz, setQuiz] = useState(() => shuffle(OSI_QUIZ)[0]);
   const [picked, setPicked] = useState(null);

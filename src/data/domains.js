@@ -54,7 +54,8 @@ export const STATUS_LABEL = {
 };
 
 export const DRILL_META = {
-  home: { path: '/', label: 'Dashboard', icon: '◈' },
+  home: { path: '/', label: 'Home · Coach', icon: '◈' },
+  path: { path: '/path', label: 'Study Path', icon: '▤' },
   review: { path: '/review', label: 'Review Misses', icon: '↻' },
   subnet: { path: '/subnet', label: 'Subnetting', icon: '⬡' },
   ports: { path: '/ports', label: 'Ports', icon: '⚡' },

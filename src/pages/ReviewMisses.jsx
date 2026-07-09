@@ -11,12 +11,14 @@ import {
 import { buildMissReviewSet, buildSessionMissSet, prepareChoices } from '../lib/study';
 import { DOMAINS } from '../data/domains';
 import { useChoiceKeys } from '../hooks/useChoiceKeys';
+import { usePathVisit } from '../hooks/usePathVisit';
 
 function wrapSet(raw) {
   return raw.map((q) => ({ ...q, choices: prepareChoices(q) }));
 }
 
 export default function ReviewMisses() {
+  usePathVisit('review-loop', 'review');
   const [params] = useSearchParams();
   const sessionOnly = params.get('session') === '1';
 

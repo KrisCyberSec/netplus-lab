@@ -14,6 +14,8 @@ import {
 import { getWeakDomains } from '../lib/weakDomains';
 import { useChoiceKeys } from '../hooks/useChoiceKeys';
 import { prepareChoices } from '../lib/study';
+import { usePathVisit } from '../hooks/usePathVisit';
+import { markPathVisit } from '../lib/progress';
 
 function buildSet(domainFilter, count) {
   const pool =
@@ -30,6 +32,7 @@ export default function Quiz() {
   const [params, setParams] = useSearchParams();
   const paramDomain = params.get('domain');
   const paramMode = params.get('mode'); // weak | normal
+  usePathVisit('mixed-quiz', paramDomain ? `quiz-d${paramDomain}` : 'quiz');
 
   const [domain, setDomain] = useState(() => {
     if (paramDomain && ['1', '2', '3', '4', '5'].includes(paramDomain)) return paramDomain;
@@ -86,7 +89,12 @@ export default function Quiz() {
     setDone(false);
     // Keep URL in sync for shareable weak-domain links
     const next = new URLSearchParams();
-    if (domain !== 'all') next.set('domain', domain);
+    if (domain !== 'all') {
+      next.set('domain', domain);
+      markPathVisit(`quiz-d${domain}`);
+    } else {
+      markPathVisit('mixed-quiz');
+    }
     setParams(next, { replace: true });
   }
 

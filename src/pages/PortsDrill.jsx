@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { PORTS } from '../data/ports';
 import { shuffle } from '../lib/shuffle';
 import { loadProgress, recordResult, accuracy } from '../lib/progress';
+import { usePathVisit } from '../hooks/usePathVisit';
 
 function buildRound() {
   const item = PORTS[Math.floor(Math.random() * PORTS.length)];
@@ -18,6 +19,7 @@ function buildRound() {
 }
 
 export default function PortsDrill() {
+  usePathVisit('ports');
   const [round, setRound] = useState(() => buildRound());
   const [picked, setPicked] = useState(null);
   const [seconds, setSeconds] = useState(0);

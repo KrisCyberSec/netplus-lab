@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { SCENARIOS } from '../data/scenarios';
 import { loadProgress, recordScenario, recordLearnEvent, accuracy } from '../lib/progress';
+import { usePathVisit } from '../hooks/usePathVisit';
 
 export default function Scenarios() {
+  usePathVisit('scenarios');
   const [index, setIndex] = useState(0);
   const [picked, setPicked] = useState(null);
   const [progress, setProgress] = useState(() => loadProgress());

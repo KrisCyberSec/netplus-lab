@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { CHEATSHEETS } from '../data/cheatsheets';
+import { usePathVisit } from '../hooks/usePathVisit';
 
 export default function Cheatsheets() {
+  usePathVisit('sheets-ports', 'sheets');
   const [active, setActive] = useState(CHEATSHEETS[0].id);
   const sheet = CHEATSHEETS.find((s) => s.id === active) || CHEATSHEETS[0];
 

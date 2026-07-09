@@ -9,6 +9,7 @@ import {
   recordSubnetTimed,
   accuracy,
 } from '../lib/progress';
+import { usePathVisit } from '../hooks/usePathVisit';
 
 const EMPTY = { broadcast: '', mask: '', usableHosts: '', firstHost: '', lastHost: '' };
 
@@ -16,6 +17,7 @@ const TIMED_TOTAL = 10;
 const TIMED_SECONDS = 5 * 60;
 
 export default function SubnetDrill() {
+  usePathVisit('subnet', 'subnet-timed');
   const [mode, setMode] = useState('practice'); // practice | timed | timed-done
   const [problem, setProblem] = useState(() => generateSubnetProblem());
   const [answers, setAnswers] = useState(EMPTY);

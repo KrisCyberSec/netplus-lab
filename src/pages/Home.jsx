@@ -1,318 +1,236 @@
 import { Link } from 'react-router-dom';
-import { DOMAINS, STATUS_LABEL, DRILL_META } from '../data/domains';
-import { QUESTIONS, countByDomain } from '../data/questions';
-import { SCENARIOS } from '../data/scenarios';
-import { PORTS } from '../data/ports';
-import {
-  loadProgress,
-  accuracy,
-  resetProgress,
-  getLearnStats,
-} from '../lib/progress';
-import { getWeakDomains } from '../lib/weakDomains';
 import { useMemo, useState } from 'react';
-
-const DRILL_CARDS = [
-  {
-    key: 'review',
-    title: 'Review misses',
-    blurb: 'Re-drill wrong answers until they stick (2 in a row to master).',
-  },
-  {
-    key: 'subnet',
-    title: 'Subnetting trainer',
-    blurb: 'Practice + timed 10-problem challenge.',
-  },
-  {
-    key: 'ports',
-    title: 'Port lightning round',
-    blurb: 'Timed recall for high-yield TCP/UDP ports and services.',
-  },
-  {
-    key: 'osi',
-    title: 'OSI map',
-    blurb: 'Click layers, learn PDUs, then quiz yourself.',
-  },
-  {
-    key: 'quiz',
-    title: 'Practice quiz',
-    blurb: 'Domain-tagged multiple choice. Misses feed the study loop.',
-  },
-  {
-    key: 'mock',
-    title: 'Mock exam',
-    blurb: 'Timed 20 / 40 / 60, domain-weighted, then review misses.',
-  },
-  {
-    key: 'scenarios',
-    title: 'Fault scenarios',
-    blurb: 'Classic “what’s wrong?” cases for Domain 5.',
-  },
-  {
-    key: 'tools',
-    title: 'Tool picker',
-    blurb: 'Pick the right CLI or hardware tool for the job.',
-  },
-  {
-    key: 'sheets',
-    title: 'Cheatsheets',
-    blurb: 'Ports, subnet math, cabling, Wi-Fi, OSI, methodology.',
-  },
-];
+import { loadProgress, resetProgress } from '../lib/progress';
+import { getCoachPlan } from '../lib/coach';
+import { STATUS_LABEL } from '../data/domains';
 
 export default function Home() {
-  const [progress, setProgress] = useState(() => loadProgress());
-  const counts = useMemo(() => countByDomain(), []);
-  const weak = useMemo(() => getWeakDomains(3), [progress]);
-  const learn = useMemo(() => getLearnStats(), [progress]);
+  const [tick, setTick] = useState(0);
+  const progress = useMemo(() => loadProgress(), [tick]);
+  const coach = useMemo(() => getCoachPlan(progress), [progress]);
+
+  function refresh() {
+    setTick((t) => t + 1);
+  }
 
   function handleReset() {
-    if (window.confirm('Reset all local progress and miss bank?')) {
-      setProgress(resetProgress());
+    if (window.confirm('Reset all progress, miss bank, and path history?')) {
+      resetProgress();
+      refresh();
     }
   }
+
+  const { primary, suggestions, path, stats, domainStats } = coach;
 
   return (
     <>
       <header className="page-header">
-        <span className="eyebrow">CompTIA Network+ practice lab · v0.3</span>
-        <h1>Train, miss, review, improve</h1>
+        <span className="eyebrow">Your guided Network+ coach</span>
+        <h1>What should I do next?</h1>
         <p>
-          Free local-first N10-009 drills with a real study loop: every wrong answer goes into
-          your miss bank so you can re-learn it until it sticks.
+          Progress is saved in this browser. Follow the path, review mistakes, and use the
+          suggestions below to get better — not just busier.
         </p>
       </header>
 
-      {/* Study loop hero */}
-      <section className="card study-loop-card" style={{ marginBottom: '1.25rem' }}>
-        <div className="eyebrow">Study loop</div>
-        <h2 style={{ marginTop: 0 }}>Learn from mistakes</h2>
-        <p className="muted">
-          Quiz and mock misses are saved here (this browser only). Review until you get each item
-          right twice in a row to master it.
+      {/* Primary next action */}
+      <section className="card coach-primary">
+        <div className="eyebrow">{primary.reason}</div>
+        <h2 style={{ marginTop: 0, fontSize: '1.45rem' }}>{primary.title}</h2>
+        <p className="muted" style={{ maxWidth: '36rem' }}>
+          {primary.detail}
         </p>
-        <div className="stat-row">
-          <div className="stat">
-            <span className="label">Active misses</span>
-            <span className="value">{learn.activeCount}</span>
-          </div>
-          <div className="stat">
-            <span className="label">Mastered</span>
-            <span className="value">{learn.masteredCount}</span>
-          </div>
-          <div className="stat">
-            <span className="label">Last session misses</span>
-            <span className="value">{learn.lastSession?.missedIds?.length ?? '—'}</span>
-          </div>
+        {primary.step && (
+          <p className="goal-line">
+            Goal: {primary.step.goalLabel}
+            {primary.step.estimate ? ` · ~${primary.step.estimate}` : ''}
+          </p>
+        )}
+        <div className="progress-bar" style={{ marginTop: '1rem', maxWidth: '20rem' }}>
+          <span style={{ width: `${path.percent}%` }} />
         </div>
-        {learn.activeCount > 0 && (
-          <div className="domain-cards" style={{ marginTop: '0.85rem' }}>
-            {DOMAINS.filter((d) => (learn.byDomain[d.id] || 0) > 0).map((d) => (
-              <div key={d.id} className="domain-card">
-                <div className="domain-weight">{learn.byDomain[d.id]}</div>
-                <div>
-                  <h3>D{d.id} open misses</h3>
-                  <p>{d.name}</p>
+        <p className="muted" style={{ marginTop: '0.4rem', fontSize: '0.85rem' }}>
+          Path {path.completed}/{path.total} steps · {path.percent}%
+        </p>
+        <div className="btn-row">
+          <Link className="btn btn-primary" to={primary.href}>
+            {primary.cta}
+          </Link>
+          <Link className="btn" to="/path">
+            Full study path
+          </Link>
+          {stats.activeMisses > 0 && primary.type !== 'review' && (
+            <Link className="btn" to="/review">
+              Review misses ({stats.activeMisses})
+            </Link>
+          )}
+        </div>
+      </section>
+
+      {/* How to get better */}
+      <section style={{ marginTop: '1.25rem' }}>
+        <h2 style={{ fontSize: '1.1rem', marginBottom: '0.65rem' }}>How to get better</h2>
+        {suggestions.length === 0 ? (
+          <div className="card">
+            <p className="muted" style={{ margin: 0 }}>
+              Not enough data yet. Hit the primary action above — suggestions appear as you
+              practice.
+            </p>
+          </div>
+        ) : (
+          <div className="suggestion-list">
+            {suggestions.map((s) => (
+              <div key={s.title} className={`card suggestion severity-${s.severity}`}>
+                <div className="suggestion-head">
+                  <span className={`badge ${s.severity === 'high' ? 'bad-badge' : s.severity === 'medium' ? 'partial' : 'thin'}`}>
+                    {s.severity}
+                  </span>
+                  <h3>{s.title}</h3>
                 </div>
-                <Link
-                  className="btn"
-                  to={`/quiz?domain=${d.id}`}
-                  style={{ fontSize: '0.8rem', padding: '0.35rem 0.6rem' }}
-                >
-                  Drill domain
-                </Link>
+                <p className="muted">{s.body}</p>
+                {s.href && s.action && (
+                  <div className="btn-row">
+                    <Link className="btn" to={s.href}>
+                      {s.action}
+                    </Link>
+                  </div>
+                )}
               </div>
             ))}
           </div>
         )}
-        <div className="btn-row">
-          <Link
-            className="btn btn-primary"
-            to={learn.activeCount > 0 ? '/review' : '/quiz'}
-          >
-            {learn.activeCount > 0 ? 'Review miss bank' : 'Start a quiz to build the bank'}
-          </Link>
-          {learn.lastSession?.missedIds?.length > 0 && (
-            <Link className="btn" to="/review?session=1">
-              Last session misses
-            </Link>
-          )}
-          <Link className="btn" to="/mock">
-            Mock exam
-          </Link>
-        </div>
       </section>
 
-      <div className="hero-grid">
-        <section className="card">
-          <h2>Your progress</h2>
-          <p className="muted">Stored only in this browser. Nothing is uploaded.</p>
+      {/* Snapshot */}
+      <section className="hero-grid" style={{ marginTop: '1.25rem' }}>
+        <div className="card">
+          <h2>Your numbers</h2>
           <div className="stat-row">
             <div className="stat">
-              <span className="label">Subnet</span>
-              <span className="value">
-                {accuracy(progress.subnet) != null ? `${accuracy(progress.subnet)}%` : '—'}
-              </span>
+              <span className="label">Study days</span>
+              <span className="value">{stats.studyDays}</span>
             </div>
             <div className="stat">
-              <span className="label">Ports</span>
-              <span className="value">
-                {accuracy(progress.ports) != null ? `${accuracy(progress.ports)}%` : '—'}
-              </span>
+              <span className="label">Active misses</span>
+              <span className="value">{stats.activeMisses}</span>
+            </div>
+            <div className="stat">
+              <span className="label">Mastered</span>
+              <span className="value">{stats.mastered}</span>
             </div>
             <div className="stat">
               <span className="label">Quiz</span>
               <span className="value">
-                {accuracy(progress.quiz) != null ? `${accuracy(progress.quiz)}%` : '—'}
+                {stats.quizAcc != null ? `${stats.quizAcc}%` : '—'}
+              </span>
+            </div>
+            <div className="stat">
+              <span className="label">Subnet</span>
+              <span className="value">
+                {stats.subnetAcc != null ? `${stats.subnetAcc}%` : '—'}
               </span>
             </div>
             <div className="stat">
               <span className="label">Mock best</span>
               <span className="value">
-                {progress.mock?.bestScore != null ? `${progress.mock.bestScore}%` : '—'}
+                {stats.mockBest != null ? `${stats.mockBest}%` : '—'}
               </span>
-            </div>
-            <div className="stat">
-              <span className="label">Scenarios</span>
-              <span className="value">
-                {progress.scenarios.completedIds?.length || 0}/{SCENARIOS.length}
-              </span>
-            </div>
-            <div className="stat">
-              <span className="label">Best subnet streak</span>
-              <span className="value">{progress.subnet.bestStreak || 0}</span>
             </div>
           </div>
           <div className="btn-row">
-            <Link className="btn" to="/subnet">
-              Subnetting
-            </Link>
-            <Link className="btn" to="/quiz">
-              Practice quiz
-            </Link>
+            <button type="button" className="btn btn-ghost" onClick={refresh}>
+              Refresh stats
+            </button>
             <button type="button" className="btn btn-ghost" onClick={handleReset}>
-              Reset progress
+              Reset all progress
             </button>
           </div>
-        </section>
+        </div>
 
-        <section className="card">
-          <h2>Content snapshot</h2>
-          <div className="stat-row">
-            <div className="stat">
-              <span className="label">Quiz items</span>
-              <span className="value">{QUESTIONS.length}</span>
-            </div>
-            <div className="stat">
-              <span className="label">Ports</span>
-              <span className="value">{PORTS.length}</span>
-            </div>
-            <div className="stat">
-              <span className="label">Scenarios</span>
-              <span className="value">{SCENARIOS.length}</span>
-            </div>
-          </div>
-          <p className="muted" style={{ marginTop: '1rem' }}>
-            Questions by domain: D1 {counts[1]} · D2 {counts[2]} · D3 {counts[3]} · D4{' '}
-            {counts[4]} · D5 {counts[5]}
-          </p>
-
-          {weak.ranked.length > 0 ? (
-            <div style={{ marginTop: '1rem' }}>
-              <h3 style={{ fontSize: '0.9rem', margin: '0 0 0.5rem' }}>Focus next (weak domains)</h3>
-              <div className="domain-cards">
-                {weak.ranked.slice(0, 2).map((d) => (
-                  <div key={d.id} className="domain-card">
-                    <div className="domain-weight">{d.accuracy}%</div>
-                    <div>
-                      <h3>
-                        D{d.id} {d.name}
-                      </h3>
-                      <p>
-                        {d.correct}/{d.attempted} quiz answers
-                      </p>
-                    </div>
+        <div className="card">
+          <h2>Domain readiness</h2>
+          <p className="muted">Based on quiz answers saved so far.</p>
+          <div className="domain-cards" style={{ marginTop: '0.75rem' }}>
+            {domainStats.map((d) => {
+              const ready =
+                d.attempted >= 10 && (d.accuracy ?? 0) >= 75
+                  ? 'strong'
+                  : d.attempted >= 5
+                    ? 'partial'
+                    : 'thin';
+              return (
+                <div key={d.id} className="domain-card">
+                  <div className="domain-weight">
+                    {d.accuracy != null ? `${d.accuracy}%` : '—'}
+                  </div>
+                  <div>
+                    <h3>
+                      D{d.id} {d.name}
+                    </h3>
+                    <p>
+                      {d.attempted} answered · {d.weight}% of exam
+                    </p>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', alignItems: 'flex-end' }}>
+                    <span className={`badge ${ready}`}>{STATUS_LABEL[ready]}</span>
                     <Link
                       className="btn"
                       to={`/quiz?domain=${d.id}`}
-                      style={{ fontSize: '0.8rem', padding: '0.35rem 0.6rem' }}
+                      style={{ fontSize: '0.75rem', padding: '0.3rem 0.5rem' }}
                     >
-                      Drill
+                      Practice
                     </Link>
                   </div>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <p className="muted" style={{ marginTop: '1rem' }}>
-              Answer a few quiz questions per domain to unlock weak-area coaching.
-            </p>
-          )}
-
-          <div className="btn-row">
-            <Link className="btn" to="/coverage">
-              Coverage matrix
-            </Link>
-            <Link className="btn" to="/sheets">
-              Cheatsheets
-            </Link>
+                </div>
+              );
+            })}
           </div>
-        </section>
-      </div>
+        </div>
+      </section>
 
-      <section style={{ marginBottom: '1.5rem' }}>
-        <h2 style={{ fontSize: '1.1rem', marginBottom: '0.75rem' }}>Exam domains (N10-009)</h2>
-        <div className="domain-cards">
-          {DOMAINS.map((d) => (
-            <div key={d.id} className="domain-card">
-              <div className="domain-weight">{d.weight}%</div>
-              <div>
-                <h3>
-                  {d.id}. {d.name}
-                </h3>
-                <p>
-                  {d.blurb} · {counts[d.id]} quiz items
-                  {(learn.byDomain[d.id] || 0) > 0
-                    ? ` · ${learn.byDomain[d.id]} open misses`
-                    : ''}
-                </p>
+      {/* Mini path preview */}
+      <section style={{ marginTop: '1.25rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+          <h2 style={{ fontSize: '1.1rem', margin: '0 0 0.65rem' }}>Learning path</h2>
+          <Link to="/path" style={{ fontSize: '0.9rem' }}>
+            View all phases →
+          </Link>
+        </div>
+        <div className="path-preview">
+          {path.phases.map((phase) => (
+            <div key={phase.id} className={`card path-phase-card ${phase.complete ? 'done' : ''}`}>
+              <div className="path-phase-top">
+                <h3>{phase.title}</h3>
+                <span className="mono">
+                  {phase.done}/{phase.total}
+                </span>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', alignItems: 'flex-end' }}>
-                <span className={`badge ${d.status}`}>{STATUS_LABEL[d.status]}</span>
-                <Link
-                  className="btn"
-                  to={`/quiz?domain=${d.id}`}
-                  style={{ fontSize: '0.75rem', padding: '0.3rem 0.5rem' }}
-                >
-                  Practice
-                </Link>
+              <p className="muted" style={{ fontSize: '0.85rem', margin: '0 0 0.65rem' }}>
+                {phase.goal}
+              </p>
+              <div className="progress-bar">
+                <span
+                  style={{
+                    width: `${phase.total ? Math.round((phase.done / phase.total) * 100) : 0}%`,
+                  }}
+                />
               </div>
+              <ul className="path-step-mini">
+                {phase.steps.map((s) => (
+                  <li key={s.id} className={s.complete ? 'complete' : ''}>
+                    <span className="step-check">{s.complete ? '✓' : '○'}</span>
+                    <Link to={s.href}>{s.title}</Link>
+                  </li>
+                ))}
+              </ul>
             </div>
           ))}
         </div>
       </section>
 
-      <section>
-        <h2 style={{ fontSize: '1.1rem', marginBottom: '0.75rem' }}>Drills</h2>
-        <div className="grid-2">
-          {DRILL_CARDS.map((d) => {
-            const meta = DRILL_META[d.key];
-            return (
-              <Link key={d.key} to={meta.path} className="card card-link">
-                <h3>
-                  {meta.icon} {d.title}
-                </h3>
-                <p className="muted">{d.blurb}</p>
-              </Link>
-            );
-          })}
-        </div>
-      </section>
-
       <p className="disclaimer">
-        Not affiliated with CompTIA. Network+ is a registered trademark of CompTIA. Use the
-        official exam objectives as the source of truth. This lab is a free study aid, not a full
-        course or hands-on hardware replacement.
+        Personal study tool for CompTIA Network+ (N10-009). Not affiliated with CompTIA. Progress
+        never leaves this browser unless you clear site data.
       </p>
     </>
   );

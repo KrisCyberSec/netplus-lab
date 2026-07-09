@@ -12,6 +12,7 @@ import {
   getLearnStats,
 } from '../lib/progress';
 import { useChoiceKeys } from '../hooks/useChoiceKeys';
+import { usePathVisit } from '../hooks/usePathVisit';
 
 function prepareQuestions(n) {
   return buildWeightedMock(n).map((q) => ({
@@ -30,6 +31,7 @@ const PRESETS = [
 ];
 
 export default function MockExam() {
+  usePathVisit('mock-baseline', 'mock-improve', 'mock');
   const [preset, setPreset] = useState(PRESETS[1]);
   const [phase, setPhase] = useState('setup'); // setup | exam | results
   const [questions, setQuestions] = useState([]);

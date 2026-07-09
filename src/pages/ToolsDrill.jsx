@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { TOOLS, TOOL_PROMPTS } from '../data/tools';
 import { shuffle } from '../lib/shuffle';
 import { loadProgress, recordResult, accuracy } from '../lib/progress';
+import { usePathVisit } from '../hooks/usePathVisit';
 
 function buildRound() {
   const prompt = TOOL_PROMPTS[Math.floor(Math.random() * TOOL_PROMPTS.length)];
@@ -12,6 +13,7 @@ function buildRound() {
 }
 
 export default function ToolsDrill() {
+  usePathVisit('tools');
   const [round, setRound] = useState(() => buildRound());
   const [picked, setPicked] = useState(null);
   const [progress, setProgress] = useState(() => loadProgress());
