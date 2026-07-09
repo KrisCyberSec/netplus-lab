@@ -704,3 +704,70 @@ code,
   color: var(--text-dim);
   font-size: 0.8rem;
 }
+
+.key-hint {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.35rem;
+  height: 1.35rem;
+  margin-right: 0.55rem;
+  border-radius: 4px;
+  border: 1px solid var(--border-strong);
+  background: var(--bg);
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  vertical-align: middle;
+}
+
+.exam-timer {
+  font-family: var(--mono);
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.exam-timer.low {
+  color: var(--bad);
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.65;
+  }
+}
+
+.pill.answered {
+  border-color: rgba(61, 156, 240, 0.45);
+  color: var(--accent);
+}
+
+.review-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.review-list li {
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+  font-size: 0.92rem;
+}
+
+.review-list .explain {
+  display: block;
+  margin-top: 0.35rem;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.choice {
+  display: flex;
+  align-items: flex-start;
+}

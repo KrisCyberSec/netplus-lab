@@ -18,7 +18,7 @@
 |--------|--------|-----------|-------|
 | 1. Networking Concepts | 23% | **Strong** | OSI, ports, subnetting, appliances |
 | 2. Network Implementation | 20% | **Partial** | High-yield routing/VLAN/cabling |
-| 3. Network Operations | 19% | **Thin** | Tools + basics; expanding |
+| 3. Network Operations | 19% | **Partial** | Ops, DR, monitoring banks expanded in v0.2 |
 | 4. Network Security | 14% | **Partial** | Attacks and controls fundamentals |
 | 5. Network Troubleshooting | 24% | **Strong** | Methodology, tools, fault scenarios |
 
@@ -35,7 +35,9 @@
 | Tool picker drill | 3, 5 | MVP |
 | Domain progress dashboard | all | MVP |
 | Full objective-tagged bank | all | v1.x |
-| Timed mock exam | all | v1.x |
+| Timed mock exam | all | Shipped (v0.2) |
+| Cheatsheets | all | Shipped (v0.2) |
+| Weak-domain dashboard hints | all | Shipped (v0.2)
 | ACL order puzzles | 4 | Later |
 | Topology / packet-path visual | 1, 2, 5 | Later |
 | Mini CLI sim | 2, 5 | Later |

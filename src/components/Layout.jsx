@@ -7,8 +7,10 @@ const LINKS = [
   'ports',
   'osi',
   'quiz',
+  'mock',
   'scenarios',
   'tools',
+  'sheets',
   'coverage',
 ];
 

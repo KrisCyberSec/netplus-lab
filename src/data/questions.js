@@ -1,8 +1,10 @@
 /**
  * Practice quiz bank. Each item: domain (1-5), optional objective, question, choices, answer index, explain.
- * MVP is intentionally skewed toward Domains 1 and 5.
+ * Base MVP bank + v0.2 extras merged from questions-extra.js.
  */
-export const QUESTIONS = [
+import { QUESTIONS_EXTRA } from './questions-extra.js';
+
+const QUESTIONS_BASE = [
   // Domain 1 — Concepts
   {
     id: 'q1',
@@ -591,6 +593,8 @@ export const QUESTIONS = [
   },
 ];
 
+export const QUESTIONS = [...QUESTIONS_BASE, ...QUESTIONS_EXTRA];
+
 export function questionsByDomain(domainId) {
   return QUESTIONS.filter((q) => q.domain === domainId);
 }
@@ -599,4 +603,32 @@ export function countByDomain() {
   const counts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
   for (const q of QUESTIONS) counts[q.domain] += 1;
   return counts;
+}
+
+/** Build a domain-weighted mock set approximating N10-009 weights. */
+export function buildWeightedMock(total = 40) {
+  const weights = { 1: 0.23, 2: 0.2, 3: 0.19, 4: 0.14, 5: 0.24 };
+  const targets = {};
+  let assigned = 0;
+  for (const d of [1, 2, 3, 4, 5]) {
+    targets[d] = Math.max(1, Math.round(total * weights[d]));
+    assigned += targets[d];
+  }
+  // Fix rounding drift on domain 5
+  targets[5] += total - assigned;
+
+  const picked = [];
+  for (const d of [1, 2, 3, 4, 5]) {
+    const pool = QUESTIONS.filter((q) => q.domain === d);
+    const n = Math.min(targets[d], pool.length);
+    const shuffled = [...pool].sort(() => Math.random() - 0.5);
+    picked.push(...shuffled.slice(0, n));
+  }
+  // If still short, fill from remaining
+  if (picked.length < total) {
+    const used = new Set(picked.map((q) => q.id));
+    const rest = QUESTIONS.filter((q) => !used.has(q.id)).sort(() => Math.random() - 0.5);
+    picked.push(...rest.slice(0, total - picked.length));
+  }
+  return picked.sort(() => Math.random() - 0.5).slice(0, total);
 }

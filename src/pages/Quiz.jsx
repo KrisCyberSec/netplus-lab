@@ -1,8 +1,9 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { QUESTIONS } from '../data/questions';
 import { DOMAINS } from '../data/domains';
 import { shuffle, pickN } from '../lib/shuffle';
 import { loadProgress, recordQuizAnswer, accuracy } from '../lib/progress';
+import { useChoiceKeys } from '../hooks/useChoiceKeys';
 
 function buildSet(domainFilter, count) {
   const pool =
@@ -44,25 +45,45 @@ export default function Quiz() {
     setDone(false);
   }
 
-  function select(originalIndex) {
-    if (picked != null || !current) return;
-    const correct = originalIndex === current.answer;
-    setPicked({ originalIndex, correct });
-    setSession((s) => ({
-      correct: s.correct + (correct ? 1 : 0),
-      answered: s.answered + 1,
-    }));
-    setProgress(recordQuizAnswer(current.domain, correct));
-  }
+  const select = useCallback(
+    (originalIndex) => {
+      if (picked != null || !current) return;
+      const correct = originalIndex === current.answer;
+      setPicked({ originalIndex, correct });
+      setSession((s) => ({
+        correct: s.correct + (correct ? 1 : 0),
+        answered: s.answered + 1,
+      }));
+      setProgress(recordQuizAnswer(current.domain, correct));
+    },
+    [picked, current],
+  );
 
-  function next() {
+  const selectDisplay = useCallback(
+    (displayIndex) => {
+      if (!current) return;
+      const c = current.choices[displayIndex];
+      if (c) select(c.originalIndex);
+    },
+    [current, select],
+  );
+
+  const next = useCallback(() => {
     if (index + 1 >= set.length) {
       setDone(true);
       return;
     }
     setIndex((i) => i + 1);
     setPicked(null);
-  }
+  }, [index, set.length]);
+
+  useChoiceKeys({
+    choiceCount: current?.choices?.length || 4,
+    onSelect: selectDisplay,
+    onNext: next,
+    enabled: !done && !!current,
+    answered: picked != null,
+  });
 
   if (done) {
     const pct = session.answered
@@ -106,7 +127,7 @@ export default function Quiz() {
         <span className="eyebrow">Domains 1–5 · {QUESTIONS.length} questions</span>
         <h1>Practice quiz</h1>
         <p>
-          Domain-tagged multiple choice. All-time accuracy:{' '}
+          Domain-tagged multiple choice. Keys: 1–4 select, Enter next. All-time accuracy:{' '}
           {accuracy(progress.quiz) != null ? `${accuracy(progress.quiz)}%` : '—'}
         </p>
       </header>
@@ -166,7 +187,7 @@ export default function Quiz() {
           </div>
           <p style={{ marginTop: '1rem', fontSize: '1.05rem' }}>{current.question}</p>
           <div className="choice-list">
-            {current.choices.map((c) => {
+            {current.choices.map((c, i) => {
               let cls = 'choice';
               if (picked) {
                 if (c.originalIndex === current.answer) cls += ' correct';
@@ -181,6 +202,7 @@ export default function Quiz() {
                   disabled={!!picked}
                   onClick={() => select(c.originalIndex)}
                 >
+                  <span className="key-hint">{i + 1}</span>
                   {c.text}
                 </button>
               );

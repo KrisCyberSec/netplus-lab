@@ -10,10 +10,13 @@ const FEATURES = [
   { name: 'OSI interactive map', domains: '1', priority: 'MVP' },
   { name: 'Domain-weighted practice quiz', domains: '1–5', priority: 'MVP' },
   { name: 'Local progress (localStorage)', domains: 'all', priority: 'MVP' },
-  { name: 'Troubleshooting scenarios', domains: '5 (+4)', priority: 'MVP' },
+  { name: 'Troubleshooting scenarios', domains: '5 (+2/4)', priority: 'MVP' },
   { name: 'Tool picker drill', domains: '3, 5', priority: 'MVP' },
+  { name: 'Timed mock exam (domain-weighted)', domains: 'all', priority: 'Shipped' },
+  { name: 'Cheatsheets', domains: 'all', priority: 'Shipped' },
+  { name: 'Weak-domain coaching on dashboard', domains: 'all', priority: 'Shipped' },
+  { name: 'Keyboard shortcuts (1–4, Enter)', domains: 'quiz/mock', priority: 'Shipped' },
   { name: 'Full objective-tagged bank (3+ per ID)', domains: 'all', priority: 'v1.x' },
-  { name: 'Timed mock exam (domain-weighted)', domains: 'all', priority: 'v1.x' },
   { name: 'ACL order puzzles', domains: '4', priority: 'Later' },
   { name: 'Topology / packet-path visual', domains: '1, 2, 5', priority: 'Later' },
   { name: 'Mini CLI sim', domains: '2, 5', priority: 'Later' },
@@ -83,7 +86,11 @@ export default function Coverage() {
                 <td>
                   <span
                     className={`badge ${
-                      f.priority === 'MVP' ? 'strong' : f.priority === 'v1.x' ? 'partial' : 'thin'
+                      f.priority === 'MVP' || f.priority === 'Shipped'
+                        ? 'strong'
+                        : f.priority === 'v1.x'
+                          ? 'partial'
+                          : 'thin'
                     }`}
                   >
                     {f.priority}

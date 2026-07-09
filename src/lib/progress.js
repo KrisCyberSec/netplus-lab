@@ -4,9 +4,15 @@ const defaultState = () => ({
   subnet: { attempted: 0, correct: 0, streak: 0, bestStreak: 0 },
   ports: { attempted: 0, correct: 0, streak: 0, bestStreak: 0 },
   osi: { attempted: 0, correct: 0 },
-  quiz: { attempted: 0, correct: 0, byDomain: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }, byDomainCorrect: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 } },
+  quiz: {
+    attempted: 0,
+    correct: 0,
+    byDomain: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+    byDomainCorrect: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+  },
   scenarios: { attempted: 0, correct: 0, completedIds: [] },
   tools: { attempted: 0, correct: 0 },
+  mock: { attempts: 0, lastScore: null, bestScore: null, history: [] },
   lastVisited: null,
 });
 
@@ -70,6 +76,23 @@ export function recordScenario(id, correct) {
   if (correct) set.add(id);
   s.completedIds = [...set];
   state.scenarios = s;
+  state.lastVisited = new Date().toISOString();
+  saveProgress(state);
+  return state;
+}
+
+export function recordMockExam({ score, correct, total }) {
+  const state = loadProgress();
+  const mock = {
+    attempts: (state.mock?.attempts || 0) + 1,
+    lastScore: score,
+    bestScore: Math.max(state.mock?.bestScore ?? 0, score),
+    history: [
+      ...(state.mock?.history || []),
+      { score, correct, total, at: new Date().toISOString() },
+    ].slice(-20),
+  };
+  state.mock = mock;
   state.lastVisited = new Date().toISOString();
   saveProgress(state);
   return state;

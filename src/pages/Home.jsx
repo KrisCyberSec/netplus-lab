@@ -4,6 +4,7 @@ import { QUESTIONS, countByDomain } from '../data/questions';
 import { SCENARIOS } from '../data/scenarios';
 import { PORTS } from '../data/ports';
 import { loadProgress, accuracy, resetProgress } from '../lib/progress';
+import { getWeakDomains } from '../lib/weakDomains';
 import { useMemo, useState } from 'react';
 
 const DRILL_CARDS = [
@@ -28,6 +29,11 @@ const DRILL_CARDS = [
     blurb: 'Domain-tagged multiple choice across all five domains.',
   },
   {
+    key: 'mock',
+    title: 'Mock exam',
+    blurb: 'Timed, domain-weighted sets of 20 / 40 / 60 questions.',
+  },
+  {
     key: 'scenarios',
     title: 'Fault scenarios',
     blurb: 'Classic “what’s wrong?” cases for Domain 5.',
@@ -37,11 +43,17 @@ const DRILL_CARDS = [
     title: 'Tool picker',
     blurb: 'Pick the right CLI or hardware tool for the job.',
   },
+  {
+    key: 'sheets',
+    title: 'Cheatsheets',
+    blurb: 'Ports, subnet math, cabling, Wi-Fi, OSI, methodology.',
+  },
 ];
 
 export default function Home() {
   const [progress, setProgress] = useState(() => loadProgress());
   const counts = useMemo(() => countByDomain(), []);
+  const weak = useMemo(() => getWeakDomains(3), [progress]);
 
   function handleReset() {
     if (window.confirm('Reset all local progress?')) {
@@ -52,11 +64,11 @@ export default function Home() {
   return (
     <>
       <header className="page-header">
-        <span className="eyebrow">CompTIA Network+ practice lab</span>
+        <span className="eyebrow">CompTIA Network+ practice lab · v0.2</span>
         <h1>Train the skills the exam actually hits</h1>
         <p>
-          Free, local-first drills for N10-009. Strong on concepts, subnetting, ports, and
-          troubleshooting. Honest about partial coverage elsewhere.
+          Free, local-first drills for N10-009. Subnetting, ports, quizzes, scenarios, cheatsheets,
+          and timed mock exams. Progress never leaves this browser.
         </p>
       </header>
 
@@ -84,6 +96,12 @@ export default function Home() {
               </span>
             </div>
             <div className="stat">
+              <span className="label">Mock best</span>
+              <span className="value">
+                {progress.mock?.bestScore != null ? `${progress.mock.bestScore}%` : '—'}
+              </span>
+            </div>
+            <div className="stat">
               <span className="label">Scenarios</span>
               <span className="value">
                 {progress.scenarios.completedIds?.length || 0}/{SCENARIOS.length}
@@ -95,11 +113,14 @@ export default function Home() {
             </div>
           </div>
           <div className="btn-row">
-            <Link className="btn btn-primary" to="/subnet">
-              Start subnetting
+            <Link className="btn btn-primary" to="/mock">
+              Start mock exam
+            </Link>
+            <Link className="btn" to="/subnet">
+              Subnetting
             </Link>
             <Link className="btn" to="/quiz">
-              Take a quiz
+              Practice quiz
             </Link>
             <button type="button" className="btn btn-ghost" onClick={handleReset}>
               Reset progress
@@ -127,9 +148,41 @@ export default function Home() {
             Questions by domain: D1 {counts[1]} · D2 {counts[2]} · D3 {counts[3]} · D4{' '}
             {counts[4]} · D5 {counts[5]}
           </p>
+
+          {weak.ranked.length > 0 ? (
+            <div style={{ marginTop: '1rem' }}>
+              <h3 style={{ fontSize: '0.9rem', margin: '0 0 0.5rem' }}>Focus next (weak domains)</h3>
+              <div className="domain-cards">
+                {weak.ranked.slice(0, 2).map((d) => (
+                  <div key={d.id} className="domain-card">
+                    <div className="domain-weight">{d.accuracy}%</div>
+                    <div>
+                      <h3>
+                        D{d.id} {d.name}
+                      </h3>
+                      <p>
+                        {d.correct}/{d.attempted} quiz answers
+                      </p>
+                    </div>
+                    <Link className="btn" to={`/quiz`} style={{ fontSize: '0.8rem', padding: '0.35rem 0.6rem' }}>
+                      Drill
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <p className="muted" style={{ marginTop: '1rem' }}>
+              Answer a few quiz questions per domain to unlock weak-area coaching.
+            </p>
+          )}
+
           <div className="btn-row">
             <Link className="btn" to="/coverage">
-              Full coverage matrix
+              Coverage matrix
+            </Link>
+            <Link className="btn" to="/sheets">
+              Cheatsheets
             </Link>
           </div>
         </section>
@@ -145,7 +198,9 @@ export default function Home() {
                 <h3>
                   {d.id}. {d.name}
                 </h3>
-                <p>{d.blurb}</p>
+                <p>
+                  {d.blurb} · {counts[d.id]} quiz items
+                </p>
               </div>
               <span className={`badge ${d.status}`}>{STATUS_LABEL[d.status]}</span>
             </div>

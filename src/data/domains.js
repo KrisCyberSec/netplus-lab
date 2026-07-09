@@ -23,9 +23,9 @@ export const DOMAINS = [
     key: 'operations',
     name: 'Network Operations',
     weight: 19,
-    status: 'thin',
+    status: 'partial',
     blurb: 'Monitoring, docs, HA, and day-to-day ops concepts.',
-    drills: ['tools', 'quiz'],
+    drills: ['tools', 'quiz', 'mock'],
   },
   {
     id: 4,
@@ -34,7 +34,7 @@ export const DOMAINS = [
     weight: 14,
     status: 'partial',
     blurb: 'Attacks, hardening, access control, and segmentation.',
-    drills: ['quiz', 'scenarios'],
+    drills: ['quiz', 'scenarios', 'mock'],
   },
   {
     id: 5,
@@ -43,7 +43,7 @@ export const DOMAINS = [
     weight: 24,
     status: 'strong',
     blurb: 'Methodology, tool choice, and classic fault scenarios.',
-    drills: ['scenarios', 'tools', 'subnet', 'quiz'],
+    drills: ['scenarios', 'tools', 'subnet', 'quiz', 'mock'],
   },
 ];
 
@@ -59,7 +59,9 @@ export const DRILL_META = {
   ports: { path: '/ports', label: 'Ports', icon: '⚡' },
   osi: { path: '/osi', label: 'OSI Map', icon: '☰' },
   quiz: { path: '/quiz', label: 'Practice Quiz', icon: '?' },
+  mock: { path: '/mock', label: 'Mock Exam', icon: '⏱' },
   scenarios: { path: '/scenarios', label: 'Scenarios', icon: '⚑' },
   tools: { path: '/tools', label: 'Tool Picker', icon: '⚒' },
-  coverage: { path: '/coverage', label: 'Coverage', icon: '▣' },
+  sheets: { path: '/sheets', label: 'Cheatsheets', icon: '≡' },
+  coverage: { path: '/coverage', label: 'Coverage', icon: '◎' },
 };

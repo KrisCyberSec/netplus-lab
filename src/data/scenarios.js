@@ -190,4 +190,68 @@ export const SCENARIOS = [
     answer: 0,
     explain: 'CRC/runts and retransmits scream Layer 1/2 path issues before app rewrites.',
   },
+  {
+    id: 's13',
+    domain: 2,
+    title: 'Native VLAN surprise',
+    symptoms:
+      'PCs on VLAN 10 work on each switch alone. After trunking two switches, some untagged management traffic appears on the wrong VLAN. Native VLAN is 1 on Switch A and 10 on Switch B.',
+    question: 'What should you fix?',
+    choices: [
+      'Match native VLANs on both ends of the trunk (and avoid using it for user data)',
+      'Disable all IP routing forever',
+      'Change every access port to VLAN 999',
+      'Replace DNS with APIPA',
+    ],
+    answer: 0,
+    explain: 'Native VLAN mismatches leak untagged frames into unexpected VLANs.',
+  },
+  {
+    id: 's14',
+    domain: 4,
+    title: 'Evil twin cafe',
+    symptoms:
+      'At a conference, users join “FreeConf-WiFi” and later report credential prompts that look like the corporate portal. A second AP with the same SSID is found nearby.',
+    question: 'What is happening?',
+    choices: [
+      'Evil twin / rogue AP phishing clients',
+      'Normal DHCP exhaustion only',
+      'Beneficial STP reconvergence',
+      'Fiber polarity inversion',
+    ],
+    answer: 0,
+    explain: 'Rogue APs clone SSIDs to harvest credentials or intercept traffic.',
+  },
+  {
+    id: 's15',
+    domain: 3,
+    title: 'Change window regret',
+    symptoms:
+      'After an undocumented ACL change, a partner VPN fails. No recent diagram exists. Logs were not reviewed before the change.',
+    question: 'Which ops gap contributed most?',
+    choices: [
+      'Weak change management and documentation',
+      'Too many cable labels',
+      'Excessive monitoring',
+      'Using SSH instead of Telnet',
+    ],
+    answer: 0,
+    explain: 'Undocumented changes without rollback planning are classic ops failures.',
+  },
+  {
+    id: 's16',
+    domain: 5,
+    title: 'Half the floor is dark',
+    symptoms:
+      'Odd-numbered cubicles on one wing have no link lights. Even-numbered jacks work. Closet shows a damaged bundle crushed by a ladder.',
+    question: 'Best next step?',
+    choices: [
+      'Inspect/replace damaged horizontal cabling; certify with a tester',
+      'Reboot the internet edge firewall only',
+      'Change all users to static APIPA',
+      'Upgrade BGP to OSPF on PCs',
+    ],
+    answer: 0,
+    explain: 'Physical damage to a cable bundle explains a pattern of dead jacks.',
+  },
 ];

@@ -24,29 +24,31 @@ npm run build && npm run preview
 
 ---
 
-## Features (MVP)
+## Features
 
 | Drill | What it trains |
 |-------|----------------|
 | **Subnetting trainer** | Mask, broadcast, host range, usable hosts from CIDR |
 | **Port lightning round** | High-yield TCP/UDP ports and services |
 | **OSI map** | Interactive layers + quick layer ID quiz |
-| **Practice quiz** | 48+ tagged questions across all 5 domains |
+| **Practice quiz** | 90+ tagged questions across all 5 domains |
+| **Mock exam** | Timed 20/40/60, domain-weighted, miss review |
 | **Fault scenarios** | “What’s wrong?” troubleshooting cases |
 | **Tool picker** | Match the job to CLI / hardware tools |
+| **Cheatsheets** | Ports, subnet math, cabling, Wi-Fi, OSI, methodology |
 | **Coverage page** | Honest domain status (strong / partial / thin) |
 
-Progress is stored in `localStorage` only.
+Progress is stored in `localStorage` only. Quiz/mock support keyboard **1–4** and **Enter**.
 
 ---
 
 ## Exam coverage (honest)
 
-| Domain | Weight | MVP status |
-|--------|--------|------------|
+| Domain | Weight | Status |
+|--------|--------|--------|
 | 1. Networking Concepts | 23% | **Strong** |
 | 2. Network Implementation | 20% | **Partial** |
-| 3. Network Operations | 19% | **Thin** |
+| 3. Network Operations | 19% | **Partial** |
 | 4. Network Security | 14% | **Partial** |
 | 5. Network Troubleshooting | 24% | **Strong** |
 
