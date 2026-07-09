@@ -10,12 +10,12 @@ import {
   recordStudySession,
   accuracy,
   getLearnStats,
+  markPathVisit,
 } from '../lib/progress';
 import { getWeakDomains } from '../lib/weakDomains';
 import { useChoiceKeys } from '../hooks/useChoiceKeys';
 import { prepareChoices } from '../lib/study';
 import { usePathVisit } from '../hooks/usePathVisit';
-import { markPathVisit } from '../lib/progress';
 
 function buildSet(domainFilter, count) {
   const pool =
