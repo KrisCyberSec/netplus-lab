@@ -254,4 +254,68 @@ export const SCENARIOS = [
     answer: 0,
     explain: 'Physical damage to a cable bundle explains a pattern of dead jacks.',
   },
+  {
+    id: 's17',
+    domain: 5,
+    title: 'Optics mystery',
+    symptoms:
+      'A new 10G link will not come up. The switch logs “unsupported transceiver.” Copper DAC in the same port works with a different peer.',
+    question: 'Most likely issue?',
+    choices: [
+      'Transceiver compatibility / coding / type mismatch',
+      'DNS TTL too high',
+      'Missing default route on a PC',
+      'WPA3 disabled',
+    ],
+    answer: 0,
+    explain: 'Optics must match speed, media, and often vendor allow-lists — classic physical/interface issue.',
+  },
+  {
+    id: 's18',
+    domain: 5,
+    title: 'Pool’s closed',
+    symptoms:
+      'Morning rush: many new laptops show 169.254.x.x. Existing workstations that stayed online overnight still work. DHCP server CPU is fine; the scope shows 0 free leases.',
+    question: 'What happened?',
+    choices: [
+      'DHCP address pool exhaustion',
+      'Spine-leaf miswire only',
+      'SMTP relay full',
+      'NTP stratum zero failure only',
+    ],
+    answer: 0,
+    explain: 'No free DHCP addresses → new clients fail (APIPA on Windows) while existing leases continue.',
+  },
+  {
+    id: 's19',
+    domain: 4,
+    title: 'Flat and dangerous',
+    symptoms:
+      'HVAC controllers and corporate laptops share one VLAN with no ACLs. A worm on a laptop begins scanning industrial IPs.',
+    question: 'What design control was missing?',
+    choices: [
+      'Segmentation between IT and OT/ICS networks',
+      'More colorful patch cables',
+      'Disabling all logging',
+      'Using hubs for OT',
+    ],
+    answer: 0,
+    explain: 'OT/ICS should be segmented and tightly controlled relative to enterprise IT.',
+  },
+  {
+    id: 's20',
+    domain: 3,
+    title: 'No diagrams, long outage',
+    symptoms:
+      'After a core failure, rebuild takes hours because nobody knows which subnets, VLANs, or firewall rules were in production. Configs were never backed up.',
+    question: 'Which ops practices failed?',
+    choices: [
+      'Documentation and configuration backup/baselines',
+      'Using fiber instead of copper',
+      'Having too many study guides',
+      'Enabling LLDP',
+    ],
+    answer: 0,
+    explain: 'Logical/physical docs plus config backups and baselines cut MTTR dramatically.',
+  },
 ];

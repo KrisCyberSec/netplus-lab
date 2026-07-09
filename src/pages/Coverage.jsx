@@ -3,48 +3,106 @@ import { countByDomain, QUESTIONS } from '../data/questions';
 import { SCENARIOS } from '../data/scenarios';
 import { PORTS } from '../data/ports';
 import { TOOL_PROMPTS } from '../data/tools';
-
-const FEATURES = [
-  { name: 'Subnetting trainer', domains: '1, 5', priority: 'MVP' },
-  { name: 'Port lightning round', domains: '1', priority: 'MVP' },
-  { name: 'OSI interactive map', domains: '1', priority: 'MVP' },
-  { name: 'Domain-weighted practice quiz', domains: '1–5', priority: 'MVP' },
-  { name: 'Local progress (localStorage)', domains: 'all', priority: 'MVP' },
-  { name: 'Troubleshooting scenarios', domains: '5 (+2/4)', priority: 'MVP' },
-  { name: 'Tool picker drill', domains: '3, 5', priority: 'MVP' },
-  { name: 'Timed mock exam (domain-weighted)', domains: 'all', priority: 'Shipped' },
-  { name: 'Cheatsheets', domains: 'all', priority: 'Shipped' },
-  { name: 'Weak-domain coaching on dashboard', domains: 'all', priority: 'Shipped' },
-  { name: 'Keyboard shortcuts (1–4, Enter)', domains: 'quiz/mock', priority: 'Shipped' },
-  { name: 'Full objective-tagged bank (3+ per ID)', domains: 'all', priority: 'v1.x' },
-  { name: 'ACL order puzzles', domains: '4', priority: 'Later' },
-  { name: 'Topology / packet-path visual', domains: '1, 2, 5', priority: 'Later' },
-  { name: 'Mini CLI sim', domains: '2, 5', priority: 'Later' },
-];
+import { EXAM_META } from '../data/objectives';
+import { coverageSummary } from '../lib/coverageAudit';
+import { useMemo } from 'react';
 
 export default function Coverage() {
   const counts = countByDomain();
+  const summary = useMemo(() => coverageSummary(), []);
 
   return (
     <>
       <header className="page-header">
-        <span className="eyebrow">Honest status</span>
-        <h1>Coverage matrix</h1>
+        <span className="eyebrow">N10-009 · Factual scope</span>
+        <h1>What this lab covers</h1>
         <p>
-          What this lab covers today versus the full N10-009 outline. Full topic coverage is a
-          content roadmap, not a day-one claim.
+          Mapped to CompTIA Network+ ({EXAM_META.code} / {EXAM_META.version}) topic areas from
+          CompTIA’s public objectives summary. This is a study aid — not a full course, not
+          official CompTIA material, and not a guarantee of exam completeness.
         </p>
       </header>
 
       <div className="card" style={{ marginBottom: '1rem' }}>
-        <h2>Domain status (MVP)</h2>
+        <h2>Exam facts (official outline)</h2>
+        <table className="table">
+          <tbody>
+            <tr>
+              <td>Exam code</td>
+              <td className="mono">
+                {EXAM_META.code} ({EXAM_META.version})
+              </td>
+            </tr>
+            <tr>
+              <td>Launch</td>
+              <td>{EXAM_META.launch}</td>
+            </tr>
+            <tr>
+              <td>Length</td>
+              <td>
+                {EXAM_META.durationMin} minutes · up to {EXAM_META.maxQuestions} questions
+              </td>
+            </tr>
+            <tr>
+              <td>Format</td>
+              <td>{EXAM_META.format}</td>
+            </tr>
+            <tr>
+              <td>Passing score</td>
+              <td>
+                {EXAM_META.passingScore} ({EXAM_META.scoreScale})
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <p className="muted" style={{ marginTop: '0.75rem' }}>
+          {EXAM_META.disclaimer}
+        </p>
+      </div>
+
+      <div className="card" style={{ marginBottom: '1rem' }}>
+        <h2>Content inventory</h2>
+        <div className="stat-row">
+          <div className="stat">
+            <span className="label">Quiz items</span>
+            <span className="value">{summary.questionTotal}</span>
+          </div>
+          <div className="stat">
+            <span className="label">Scenarios</span>
+            <span className="value">{SCENARIOS.length}</span>
+          </div>
+          <div className="stat">
+            <span className="label">Ports</span>
+            <span className="value">{PORTS.length}</span>
+          </div>
+          <div className="stat">
+            <span className="label">Tool prompts</span>
+            <span className="value">{TOOL_PROMPTS.length}</span>
+          </div>
+          <div className="stat">
+            <span className="label">Topics ≥3 Q</span>
+            <span className="value">{summary.strong}</span>
+          </div>
+          <div className="stat">
+            <span className="label">Topics thin (0 Q)</span>
+            <span className="value">{summary.thin}</span>
+          </div>
+        </div>
+        <p className="muted" style={{ marginTop: '0.75rem' }}>
+          Domain quiz counts: D1 {counts[1]} · D2 {counts[2]} · D3 {counts[3]} · D4 {counts[4]} ·
+          D5 {counts[5]} (total {QUESTIONS.length})
+        </p>
+      </div>
+
+      <div className="card" style={{ marginBottom: '1rem' }}>
+        <h2>Domain weights (exam)</h2>
         <table className="table">
           <thead>
             <tr>
               <th>Domain</th>
               <th>Weight</th>
-              <th>Status</th>
-              <th>Quiz items</th>
+              <th>Lab quiz items</th>
+              <th>Lab depth</th>
             </tr>
           </thead>
           <tbody>
@@ -54,76 +112,75 @@ export default function Coverage() {
                   {d.id}. {d.name}
                 </td>
                 <td className="mono">{d.weight}%</td>
+                <td className="mono">{counts[d.id]}</td>
                 <td>
                   <span className={`badge ${d.status}`}>{STATUS_LABEL[d.status]}</span>
                 </td>
-                <td className="mono">{counts[d.id]}</td>
               </tr>
             ))}
           </tbody>
         </table>
-        <p className="muted" style={{ marginTop: '0.75rem' }}>
-          Plus {PORTS.length} ports, {SCENARIOS.length} scenarios, {TOOL_PROMPTS.length} tool
-          prompts, subnet generator, OSI map. Total quiz bank: {QUESTIONS.length}.
-        </p>
       </div>
 
       <div className="card" style={{ marginBottom: '1rem' }}>
-        <h2>Feature roadmap</h2>
-        <table className="table">
-          <thead>
-            <tr>
-              <th>Feature</th>
-              <th>Domains</th>
-              <th>Priority</th>
-            </tr>
-          </thead>
-          <tbody>
-            {FEATURES.map((f) => (
-              <tr key={f.name}>
-                <td>{f.name}</td>
-                <td>{f.domains}</td>
-                <td>
-                  <span
-                    className={`badge ${
-                      f.priority === 'MVP' || f.priority === 'Shipped'
-                        ? 'strong'
-                        : f.priority === 'v1.x'
-                          ? 'partial'
-                          : 'thin'
-                    }`}
-                  >
-                    {f.priority}
-                  </span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <h2>Topic map vs quiz bank</h2>
+        <p className="muted">
+          Strong = 3+ tagged questions · Partial = 1–2 · Thin = none yet. Drills (subnet, OSI,
+          ports, scenarios) cover some thin quiz cells in practice.
+        </p>
+        {summary.rows.map((domain) => (
+          <div key={domain.domain} style={{ marginTop: '1rem' }}>
+            <h3 style={{ fontSize: '0.95rem', marginBottom: '0.4rem' }}>
+              {domain.domain}. {domain.name} ({domain.weight}%)
+            </h3>
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Topic</th>
+                  <th>Qs</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {domain.topics.map((t) => (
+                  <tr key={t.id}>
+                    <td className="mono">{t.id}</td>
+                    <td>{t.title}</td>
+                    <td className="mono">{t.count}</td>
+                    <td>
+                      <span className={`badge ${t.status}`}>{STATUS_LABEL[t.status]}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ))}
       </div>
 
       <div className="card">
-        <h2>What “full coverage” means later</h2>
+        <h2>What this lab cannot fully replace</h2>
         <ul style={{ margin: 0, paddingLeft: '1.2rem', color: 'var(--text-muted)' }}>
-          <li>Every official objective ID has multiple tagged questions</li>
-          <li>Mock exam weighting matches domain percentages</li>
-          <li>D2 / D3 / D4 banks are no longer thin</li>
-          <li>Scenarios span cable, wireless, routing, security, and ops</li>
-          <li>Hands-on hardware and Packet Tracer remain external</li>
+          <li>Official CompTIA objectives PDF (authoritative checklist)</li>
+          <li>Hands-on labs (real gear, Packet Tracer, vendor sims)</li>
+          <li>Performance-based exam UI (PBQs)</li>
+          <li>Vendor-specific CLI syntax depth beyond concepts</li>
         </ul>
+        <p className="muted" style={{ marginTop: '0.75rem' }}>
+          Source:{' '}
+          <a
+            href="https://www.comptia.org/en-us/certifications/network/"
+            target="_blank"
+            rel="noreferrer"
+          >
+            CompTIA Network+ page
+          </a>
+          . Download the full objectives PDF from CompTIA for the complete bullet list.
+        </p>
       </div>
 
-      <p className="disclaimer">
-        Not affiliated with CompTIA. See{' '}
-        <a
-          href="https://www.comptia.org/en-us/certifications/network/"
-          target="_blank"
-          rel="noreferrer"
-        >
-          official Network+ page
-        </a>{' '}
-        for current objectives. Details also live in <code>docs/COVERAGE.md</code>.
-      </p>
+      <p className="disclaimer">{EXAM_META.disclaimer}</p>
     </>
   );
 }

@@ -90,6 +90,24 @@ export const TOOLS = [
     category: 'Wireless',
     use: 'Survey channels, SSID strength, and overlapping BSS.',
   },
+  {
+    id: 'span',
+    name: 'Port mirror / SPAN',
+    category: 'Switch feature',
+    use: 'Copy traffic from a source port or VLAN to an analyzer for capture/IDS.',
+  },
+  {
+    id: 'iperf',
+    name: 'iperf / bandwidth test',
+    category: 'CLI',
+    use: 'Measure throughput between two endpoints to validate capacity.',
+  },
+  {
+    id: 'lldp',
+    name: 'LLDP / CDP',
+    category: 'CLI',
+    use: 'Discover neighbor device identity and connected interfaces.',
+  },
 ];
 
 export const TOOL_PROMPTS = [
@@ -167,5 +185,20 @@ export const TOOL_PROMPTS = [
     prompt: 'Decode a SIP call setup that fails mid-handshake.',
     answerId: 'protocol-analyzer',
     explain: 'Protocol analyzers break down application exchanges beyond raw packets.',
+  },
+  {
+    prompt: 'Feed a packet capture appliance every frame from a production VLAN without inline insertion.',
+    answerId: 'span',
+    explain: 'SPAN/mirror copies traffic to a monitoring port for analyzers or IDS.',
+  },
+  {
+    prompt: 'Prove a WAN upgrade actually delivers near the purchased throughput between two sites.',
+    answerId: 'iperf',
+    explain: 'Active bandwidth tests measure achievable goodput under controlled conditions.',
+  },
+  {
+    prompt: 'Identify which switch and port a server NIC is plugged into from the server CLI/neighbor table.',
+    answerId: 'lldp',
+    explain: 'LLDP/CDP advertise chassis and port IDs to directly connected peers.',
   },
 ];

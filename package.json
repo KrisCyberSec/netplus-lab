@@ -1,7 +1,7 @@
 {
   "name": "netplus-lab",
   "private": true,
-  "version": "0.4.0",
+  "version": "0.5.0",
   "type": "module",
   "description": "Free CompTIA Network+ (N10-009) practice drills: subnetting, ports, OSI, quizzes, scenarios",
   "scripts": {

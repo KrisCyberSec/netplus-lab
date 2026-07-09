@@ -14,8 +14,8 @@ export const DOMAINS = [
     key: 'implementation',
     name: 'Network Implementation',
     weight: 20,
-    status: 'partial',
-    blurb: 'Routing, VLANs, wireless, and physical install high-yield items.',
+    status: 'strong',
+    blurb: 'Routing, VLANs, wireless, physical install, FHRP, NAT/PAT, MTU.',
     drills: ['quiz'],
   },
   {
@@ -23,8 +23,8 @@ export const DOMAINS = [
     key: 'operations',
     name: 'Network Operations',
     weight: 19,
-    status: 'partial',
-    blurb: 'Monitoring, docs, HA, and day-to-day ops concepts.',
+    status: 'strong',
+    blurb: 'Docs, monitoring, DR, services (DHCP/DNS/NTP), management access.',
     drills: ['tools', 'quiz', 'mock'],
   },
   {
@@ -32,8 +32,8 @@ export const DOMAINS = [
     key: 'security',
     name: 'Network Security',
     weight: 14,
-    status: 'partial',
-    blurb: 'Attacks, hardening, access control, and segmentation.',
+    status: 'strong',
+    blurb: 'AAA, attacks, segmentation, NAC, compliance basics, CIA triad.',
     drills: ['quiz', 'scenarios', 'mock'],
   },
   {

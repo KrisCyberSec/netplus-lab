@@ -31,7 +31,7 @@ npm run build && npm run preview
 | **Subnetting trainer** | Mask, broadcast, host range, usable hosts from CIDR |
 | **Port lightning round** | High-yield TCP/UDP ports and services |
 | **OSI map** | Interactive layers + quick layer ID quiz |
-| **Practice quiz** | 90+ tagged questions across all 5 domains |
+| **Practice quiz** | 160+ questions mapped to N10-009 topic areas |
 | **Study loop / Review misses** | Wrong answers saved; re-drill until mastered (2 in a row) |
 | **Mock exam** | Timed 20/40/60, domain-weighted, then review misses |
 | **Fault scenarios** | “What’s wrong?” troubleshooting cases |
@@ -52,19 +52,19 @@ Progress is stored in `localStorage` only. Quiz/mock support keyboard **1–4** 
 
 ---
 
-## Exam coverage (honest)
+## Exam coverage (N10-009)
 
-| Domain | Weight | Status |
-|--------|--------|--------|
-| 1. Networking Concepts | 23% | **Strong** |
-| 2. Network Implementation | 20% | **Partial** |
-| 3. Network Operations | 19% | **Partial** |
-| 4. Network Security | 14% | **Partial** |
-| 5. Network Troubleshooting | 24% | **Strong** |
+Aligned to CompTIA Network+ **N10-009 / V9** public objectives summary (concepts, implementation, operations, security, troubleshooting). Live topic map: in-app **Coverage** page and [`docs/COVERAGE.md`](docs/COVERAGE.md).
 
-Full matrix: [`docs/COVERAGE.md`](docs/COVERAGE.md).
+| Domain | Weight | Lab depth |
+|--------|--------|-----------|
+| 1. Networking Concepts | 23% | Strong |
+| 2. Network Implementation | 20% | Strong |
+| 3. Network Operations | 19% | Strong |
+| 4. Network Security | 14% | Strong |
+| 5. Network Troubleshooting | 24% | Strong |
 
-This is **not** a claim of 100% objective coverage. MVP is exam-shaped (heavy on concepts + troubleshooting). Full coverage is a content roadmap.
+**Not** a substitute for CompTIA’s official PDF, hands-on labs, or PBQs. Content is factual networking study material — not a brain dump.
 
 ---
 

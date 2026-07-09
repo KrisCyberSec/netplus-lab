@@ -1,56 +1,54 @@
-# Network+ Coverage Matrix (N10-009)
+# Network+ Coverage (N10-009 / V9)
 
-**Exam:** CompTIA Network+ (N10-009)  
-**Not affiliated with CompTIA.** Official objectives are the source of truth.
+**Exam:** CompTIA Network+ N10-009  
+**Source of truth:** CompTIA’s official objectives PDF + public Network+ summary  
+**Lab code map:** `src/data/objectives.js`  
+**Not affiliated with CompTIA.**
 
-## Legend
+## Exam facts
 
-| Tag | Meaning |
-|-----|---------|
-| **MVP** | Ships in first release |
-| **v1.x** | Soon after; still core product |
-| **Later** | Nice-to-have / deeper fidelity |
-| **External** | Point users to labs / hardware — not fully replaceable in-browser |
+| Item | Value |
+|------|--------|
+| Code | N10-009 (V9) |
+| Launch | June 20, 2024 |
+| Time | 90 minutes |
+| Questions | Up to 90 (MC + PBQ) |
+| Pass | 720 / 100–900 |
 
-## Domain overview
+## Domain weights
 
-| Domain | Weight | MVP depth | Notes |
-|--------|--------|-----------|-------|
-| 1. Networking Concepts | 23% | **Strong** | OSI, ports, subnetting, appliances |
-| 2. Network Implementation | 20% | **Partial** | High-yield routing/VLAN/cabling |
-| 3. Network Operations | 19% | **Partial** | Ops, DR, monitoring banks expanded in v0.2 |
-| 4. Network Security | 14% | **Partial** | Attacks and controls fundamentals |
-| 5. Network Troubleshooting | 24% | **Strong** | Methodology, tools, fault scenarios |
+| Domain | Weight | Lab posture |
+|--------|--------|-------------|
+| 1. Networking Concepts | 23% | Strong (OSI, ports, subnet, media, cloud, topologies) |
+| 2. Network Implementation | 20% | Strong (routing/switching/wireless/physical) |
+| 3. Network Operations | 19% | Strong (docs, monitor, DR, services, access) |
+| 4. Network Security | 14% | Strong (AAA, attacks, segment, defense) |
+| 5. Network Troubleshooting | 24% | Strong (method, tools, scenarios, faults) |
 
-## Feature matrix
+## Honesty limits
 
-| Feature | Domains | Priority |
-|---------|---------|----------|
-| Subnetting trainer | 1, 5 | MVP |
-| Port / protocol lightning round | 1 | MVP |
-| OSI interactive map | 1 | MVP |
-| Domain-weighted practice quiz | 1–5 | MVP |
-| Weak-area review (localStorage) | all | MVP |
-| Troubleshooting scenarios | 5 (+2/4) | MVP |
-| Tool picker drill | 3, 5 | MVP |
-| Domain progress dashboard | all | MVP |
-| Full objective-tagged bank | all | v1.x |
-| Timed mock exam | all | Shipped (v0.2) |
-| Cheatsheets | all | Shipped (v0.2) |
-| Weak-domain dashboard hints | all | Shipped (v0.2) |
-| Miss bank + review until mastered | all | Shipped (v0.3) |
-| Post-session review CTAs | quiz/mock | Shipped (v0.3) |
-| Domain deep-links (`/quiz?domain=N`) | all | Shipped (v0.3) |
-| Subnet timed challenge | 1, 5 | Shipped (v0.3) |
-| ACL order puzzles | 4 | Later |
-| Topology / packet-path visual | 1, 2, 5 | Later |
-| Mini CLI sim | 2, 5 | Later |
+Even with a large quiz bank, this lab is **not**:
 
-## Full coverage milestone
+- A word-for-word copy of CompTIA’s full PDF (use the official PDF)
+- A replacement for hands-on labs or PBQ simulators
+- Guaranteed 100% bullet coverage of every sub-sub-objective
 
-- [ ] Every exam objective ID has ≥ 3 questions
-- [ ] Mock exam weighting matches domain %
-- [ ] D2/D3/D4 banks no longer thin
-- [ ] Scenario set spans cable, wireless, routing, security, ops
+It **is** aligned to CompTIA’s published V9 topic summary and uses standard, factual networking content.
 
-Questions live in `src/data/` and are tagged with `domain` and optional `objective` IDs.
+## Inventory (see app Coverage page for live counts)
+
+- Quiz bank: base + extra + N10-009 expansion (`questions*.js`)
+- Drills: subnet, ports, OSI, tools, scenarios, mock, cheatsheets
+- Study path + miss bank for learning loop
+
+## How we keep content factual
+
+1. Prefer CompTIA’s public topic list for scope
+2. Write questions from established networking facts (RFCs, vendor-neutral practice)
+3. Avoid brain-dump “exact exam Q” claims
+4. Fix errors when found (e.g. IPv6 ULA vs link-local)
+5. Coverage page shows per-topic quiz counts
+
+## Gaps to watch
+
+Open Coverage in the app: any topic with **Thin (0 Q)** still needs more items, even if a drill touches it. Prioritize those for the next content pass.

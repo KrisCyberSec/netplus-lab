@@ -3,6 +3,7 @@
  * Base MVP bank + v0.2 extras merged from questions-extra.js.
  */
 import { QUESTIONS_EXTRA } from './questions-extra.js';
+import { QUESTIONS_N10009 } from './questions-n10009.js';
 
 const QUESTIONS_BASE = [
   // Domain 1 — Concepts
@@ -147,10 +148,10 @@ const QUESTIONS_BASE = [
     id: 'q14',
     domain: 1,
     objective: '1.4',
-    question: 'Which IPv6 address type is roughly analogous to an IPv4 private address for local communication?',
-    choices: ['Global unicast', 'Link-local', 'Multicast all-nodes only', 'Loopback ::1 only'],
+    question: 'Which IPv6 address type is the closest analog to IPv4 private (RFC 1918) addressing for site-local routed use?',
+    choices: ['Global unicast', 'Unique local (ULA)', 'Link-local only', 'Multicast FF02::1 only'],
     answer: 1,
-    explain: 'Link-local (fe80::/10) is used on-link; unique local (fc00::/7) is the closer RFC 1918 analog, but link-local is the classic exam contrast with global.',
+    explain: 'Unique local addresses (fc00::/7, commonly fd00::/8) are privately routed within a site. Link-local (fe80::/10) is only for on-link communication and is not an RFC 1918 stand-in.',
   },
   {
     id: 'q15',
@@ -593,7 +594,7 @@ const QUESTIONS_BASE = [
   },
 ];
 
-export const QUESTIONS = [...QUESTIONS_BASE, ...QUESTIONS_EXTRA];
+export const QUESTIONS = [...QUESTIONS_BASE, ...QUESTIONS_EXTRA, ...QUESTIONS_N10009];
 
 export function questionsByDomain(domainId) {
   return QUESTIONS.filter((q) => q.domain === domainId);
