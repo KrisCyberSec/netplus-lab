@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { SCENARIOS } from '../data/scenarios';
-import { loadProgress, recordScenario, accuracy } from '../lib/progress';
+import { loadProgress, recordScenario, recordLearnEvent, accuracy } from '../lib/progress';
 
 export default function Scenarios() {
   const [index, setIndex] = useState(0);
@@ -14,7 +14,16 @@ export default function Scenarios() {
     if (picked != null) return;
     const correct = i === item.answer;
     setPicked({ i, correct });
-    setProgress(recordScenario(item.id, correct));
+    recordScenario(item.id, correct);
+    setProgress(
+      recordLearnEvent({
+        id: item.id,
+        domain: item.domain,
+        kind: 'scenario',
+        correct,
+        prompt: item.title,
+      }),
+    );
   }
 
   function go(delta) {

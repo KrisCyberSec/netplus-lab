@@ -37,7 +37,11 @@
 | Full objective-tagged bank | all | v1.x |
 | Timed mock exam | all | Shipped (v0.2) |
 | Cheatsheets | all | Shipped (v0.2) |
-| Weak-domain dashboard hints | all | Shipped (v0.2)
+| Weak-domain dashboard hints | all | Shipped (v0.2) |
+| Miss bank + review until mastered | all | Shipped (v0.3) |
+| Post-session review CTAs | quiz/mock | Shipped (v0.3) |
+| Domain deep-links (`/quiz?domain=N`) | all | Shipped (v0.3) |
+| Subnet timed challenge | 1, 5 | Shipped (v0.3) |
 | ACL order puzzles | 4 | Later |
 | Topology / packet-path visual | 1, 2, 5 | Later |
 | Mini CLI sim | 2, 5 | Later |

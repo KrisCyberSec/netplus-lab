@@ -3,6 +3,7 @@ import { DRILL_META } from '../data/domains';
 
 const LINKS = [
   'home',
+  'review',
   'subnet',
   'ports',
   'osi',

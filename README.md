@@ -32,13 +32,23 @@ npm run build && npm run preview
 | **Port lightning round** | High-yield TCP/UDP ports and services |
 | **OSI map** | Interactive layers + quick layer ID quiz |
 | **Practice quiz** | 90+ tagged questions across all 5 domains |
-| **Mock exam** | Timed 20/40/60, domain-weighted, miss review |
+| **Study loop / Review misses** | Wrong answers saved; re-drill until mastered (2 in a row) |
+| **Mock exam** | Timed 20/40/60, domain-weighted, then review misses |
 | **Fault scenarios** | “What’s wrong?” troubleshooting cases |
 | **Tool picker** | Match the job to CLI / hardware tools |
 | **Cheatsheets** | Ports, subnet math, cabling, Wi-Fi, OSI, methodology |
+| **Subnet timed mode** | 10 problems / 5 minutes challenge |
 | **Coverage page** | Honest domain status (strong / partial / thin) |
 
 Progress is stored in `localStorage` only. Quiz/mock support keyboard **1–4** and **Enter**.
+
+### How the study loop works
+
+1. Take a **practice quiz** or **mock exam**.
+2. Every wrong answer is saved to your **miss bank** (local only).
+3. Open **Review misses** — or use the post-session “Review these misses” button.
+4. Get an item **right twice in a row** to mark it **mastered**.
+5. Dashboard shows active misses by domain and deep-links to ` /quiz?domain=N `.
 
 ---
 

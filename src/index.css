@@ -771,3 +771,38 @@ code,
   display: flex;
   align-items: flex-start;
 }
+
+.study-loop-card {
+  border-color: rgba(61, 156, 240, 0.35);
+  background:
+    linear-gradient(135deg, rgba(61, 156, 240, 0.08), transparent 50%),
+    var(--bg-card);
+}
+
+.study-cta {
+  margin-top: 1rem;
+  padding: 1rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(61, 156, 240, 0.35);
+  background: var(--accent-dim);
+}
+
+.study-cta h3 {
+  margin: 0 0 0.35rem;
+  font-size: 1rem;
+}
+
+.study-cta p {
+  margin: 0;
+}
+
+.how-list {
+  margin: 0 0 1rem;
+  padding-left: 1.2rem;
+  color: var(--text-muted);
+  line-height: 1.65;
+}
+
+.how-list li {
+  margin-bottom: 0.35rem;
+}

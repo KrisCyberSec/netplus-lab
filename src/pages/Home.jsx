@@ -3,15 +3,25 @@ import { DOMAINS, STATUS_LABEL, DRILL_META } from '../data/domains';
 import { QUESTIONS, countByDomain } from '../data/questions';
 import { SCENARIOS } from '../data/scenarios';
 import { PORTS } from '../data/ports';
-import { loadProgress, accuracy, resetProgress } from '../lib/progress';
+import {
+  loadProgress,
+  accuracy,
+  resetProgress,
+  getLearnStats,
+} from '../lib/progress';
 import { getWeakDomains } from '../lib/weakDomains';
 import { useMemo, useState } from 'react';
 
 const DRILL_CARDS = [
   {
+    key: 'review',
+    title: 'Review misses',
+    blurb: 'Re-drill wrong answers until they stick (2 in a row to master).',
+  },
+  {
     key: 'subnet',
     title: 'Subnetting trainer',
-    blurb: 'CIDR, masks, broadcast, usable hosts. The Network+ pain point.',
+    blurb: 'Practice + timed 10-problem challenge.',
   },
   {
     key: 'ports',
@@ -26,12 +36,12 @@ const DRILL_CARDS = [
   {
     key: 'quiz',
     title: 'Practice quiz',
-    blurb: 'Domain-tagged multiple choice across all five domains.',
+    blurb: 'Domain-tagged multiple choice. Misses feed the study loop.',
   },
   {
     key: 'mock',
     title: 'Mock exam',
-    blurb: 'Timed, domain-weighted sets of 20 / 40 / 60 questions.',
+    blurb: 'Timed 20 / 40 / 60, domain-weighted, then review misses.',
   },
   {
     key: 'scenarios',
@@ -54,9 +64,10 @@ export default function Home() {
   const [progress, setProgress] = useState(() => loadProgress());
   const counts = useMemo(() => countByDomain(), []);
   const weak = useMemo(() => getWeakDomains(3), [progress]);
+  const learn = useMemo(() => getLearnStats(), [progress]);
 
   function handleReset() {
-    if (window.confirm('Reset all local progress?')) {
+    if (window.confirm('Reset all local progress and miss bank?')) {
       setProgress(resetProgress());
     }
   }
@@ -64,13 +75,73 @@ export default function Home() {
   return (
     <>
       <header className="page-header">
-        <span className="eyebrow">CompTIA Network+ practice lab · v0.2</span>
-        <h1>Train the skills the exam actually hits</h1>
+        <span className="eyebrow">CompTIA Network+ practice lab · v0.3</span>
+        <h1>Train, miss, review, improve</h1>
         <p>
-          Free, local-first drills for N10-009. Subnetting, ports, quizzes, scenarios, cheatsheets,
-          and timed mock exams. Progress never leaves this browser.
+          Free local-first N10-009 drills with a real study loop: every wrong answer goes into
+          your miss bank so you can re-learn it until it sticks.
         </p>
       </header>
+
+      {/* Study loop hero */}
+      <section className="card study-loop-card" style={{ marginBottom: '1.25rem' }}>
+        <div className="eyebrow">Study loop</div>
+        <h2 style={{ marginTop: 0 }}>Learn from mistakes</h2>
+        <p className="muted">
+          Quiz and mock misses are saved here (this browser only). Review until you get each item
+          right twice in a row to master it.
+        </p>
+        <div className="stat-row">
+          <div className="stat">
+            <span className="label">Active misses</span>
+            <span className="value">{learn.activeCount}</span>
+          </div>
+          <div className="stat">
+            <span className="label">Mastered</span>
+            <span className="value">{learn.masteredCount}</span>
+          </div>
+          <div className="stat">
+            <span className="label">Last session misses</span>
+            <span className="value">{learn.lastSession?.missedIds?.length ?? '—'}</span>
+          </div>
+        </div>
+        {learn.activeCount > 0 && (
+          <div className="domain-cards" style={{ marginTop: '0.85rem' }}>
+            {DOMAINS.filter((d) => (learn.byDomain[d.id] || 0) > 0).map((d) => (
+              <div key={d.id} className="domain-card">
+                <div className="domain-weight">{learn.byDomain[d.id]}</div>
+                <div>
+                  <h3>D{d.id} open misses</h3>
+                  <p>{d.name}</p>
+                </div>
+                <Link
+                  className="btn"
+                  to={`/quiz?domain=${d.id}`}
+                  style={{ fontSize: '0.8rem', padding: '0.35rem 0.6rem' }}
+                >
+                  Drill domain
+                </Link>
+              </div>
+            ))}
+          </div>
+        )}
+        <div className="btn-row">
+          <Link
+            className="btn btn-primary"
+            to={learn.activeCount > 0 ? '/review' : '/quiz'}
+          >
+            {learn.activeCount > 0 ? 'Review miss bank' : 'Start a quiz to build the bank'}
+          </Link>
+          {learn.lastSession?.missedIds?.length > 0 && (
+            <Link className="btn" to="/review?session=1">
+              Last session misses
+            </Link>
+          )}
+          <Link className="btn" to="/mock">
+            Mock exam
+          </Link>
+        </div>
+      </section>
 
       <div className="hero-grid">
         <section className="card">
@@ -113,9 +184,6 @@ export default function Home() {
             </div>
           </div>
           <div className="btn-row">
-            <Link className="btn btn-primary" to="/mock">
-              Start mock exam
-            </Link>
             <Link className="btn" to="/subnet">
               Subnetting
             </Link>
@@ -164,7 +232,11 @@ export default function Home() {
                         {d.correct}/{d.attempted} quiz answers
                       </p>
                     </div>
-                    <Link className="btn" to={`/quiz`} style={{ fontSize: '0.8rem', padding: '0.35rem 0.6rem' }}>
+                    <Link
+                      className="btn"
+                      to={`/quiz?domain=${d.id}`}
+                      style={{ fontSize: '0.8rem', padding: '0.35rem 0.6rem' }}
+                    >
                       Drill
                     </Link>
                   </div>
@@ -200,9 +272,21 @@ export default function Home() {
                 </h3>
                 <p>
                   {d.blurb} · {counts[d.id]} quiz items
+                  {(learn.byDomain[d.id] || 0) > 0
+                    ? ` · ${learn.byDomain[d.id]} open misses`
+                    : ''}
                 </p>
               </div>
-              <span className={`badge ${d.status}`}>{STATUS_LABEL[d.status]}</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem', alignItems: 'flex-end' }}>
+                <span className={`badge ${d.status}`}>{STATUS_LABEL[d.status]}</span>
+                <Link
+                  className="btn"
+                  to={`/quiz?domain=${d.id}`}
+                  style={{ fontSize: '0.75rem', padding: '0.3rem 0.5rem' }}
+                >
+                  Practice
+                </Link>
+              </div>
             </div>
           ))}
         </div>

@@ -1,8 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { buildWeightedMock } from '../data/questions';
 import { DOMAINS } from '../data/domains';
 import { shuffle } from '../lib/shuffle';
-import { loadProgress, recordMockExam, recordQuizAnswer } from '../lib/progress';
+import {
+  loadProgress,
+  recordMockExam,
+  recordQuizAnswer,
+  recordLearnEvent,
+  recordStudySession,
+  getLearnStats,
+} from '../lib/progress';
 import { useChoiceKeys } from '../hooks/useChoiceKeys';
 
 function prepareQuestions(n) {
@@ -46,6 +54,7 @@ export default function MockExam() {
     let correct = 0;
     const byDomain = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
     const byDomainCorrect = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+    const missedIds = [];
 
     for (const q of questions) {
       byDomain[q.domain] += 1;
@@ -54,19 +63,33 @@ export default function MockExam() {
       if (ok) {
         correct += 1;
         byDomainCorrect[q.domain] += 1;
+      } else {
+        missedIds.push(q.id);
       }
-      // Feed weak-domain stats
       recordQuizAnswer(q.domain, ok);
+      recordLearnEvent({
+        id: q.id,
+        domain: q.domain,
+        kind: 'quiz',
+        correct: ok,
+        prompt: q.question,
+      });
     }
 
     const pct = questions.length ? Math.round((correct / questions.length) * 100) : 0;
+    recordMockExam({
+      score: pct,
+      correct,
+      total: questions.length,
+      byDomain,
+      byDomainCorrect,
+    });
     setProgress(
-      recordMockExam({
-        score: pct,
+      recordStudySession({
+        source: 'mock',
+        missedIds,
         correct,
         total: questions.length,
-        byDomain,
-        byDomainCorrect,
       }),
     );
     setPhase('results');
@@ -166,7 +189,9 @@ export default function MockExam() {
 
   if (phase === 'results') {
     const correct = questions.filter((q) => answers[q.id] === q.answer).length;
+    const missed = questions.length - correct;
     const pct = questions.length ? Math.round((correct / questions.length) * 100) : 0;
+    const learn = getLearnStats();
     return (
       <>
         <header className="page-header">
@@ -178,10 +203,28 @@ export default function MockExam() {
             {pct >= 80
               ? 'Strong pass-range performance for a study mock.'
               : pct >= 70
-                ? 'Borderline. Drill weak domains next.'
-                : 'Keep training. Review misses by domain below.'}
+                ? 'Borderline. Drill weak domains and review misses next.'
+                : 'Keep training. Review misses — that is how scores climb.'}
           </p>
         </header>
+
+        {missed > 0 && (
+          <div className="card study-cta" style={{ marginBottom: '1rem' }}>
+            <h3>Study loop</h3>
+            <p className="muted">
+              {missed} miss{missed === 1 ? '' : 'es'} from this exam are in your bank (
+              {learn.activeCount} active total). Review now to convert mistakes into memory.
+            </p>
+            <div className="btn-row">
+              <Link className="btn btn-primary" to="/review?session=1">
+                Review these misses
+              </Link>
+              <Link className="btn" to="/review">
+                Full miss bank
+              </Link>
+            </div>
+          </div>
+        )}
 
         <div className="card" style={{ marginBottom: '1rem' }}>
           <h2>By domain</h2>
@@ -197,6 +240,15 @@ export default function MockExam() {
                     {d.correct}/{d.total} correct
                   </p>
                 </div>
+                {d.pct < 70 && d.total > 0 && (
+                  <Link
+                    className="btn"
+                    to={`/quiz?domain=${d.id}`}
+                    style={{ fontSize: '0.8rem', padding: '0.35rem 0.6rem' }}
+                  >
+                    Drill D{d.id}
+                  </Link>
+                )}
               </div>
             ))}
           </div>
