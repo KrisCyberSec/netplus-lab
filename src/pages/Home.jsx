@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useRef } from 'react';
 import {
   loadProgress,
   resetProgress,
@@ -12,7 +12,6 @@ import { getCoachPlan } from '../lib/coach';
 import { STATUS_LABEL } from '../data/domains';
 import PageHeader from '../components/PageHeader';
 import ExamWeek from '../components/ExamWeek';
-import { useRef } from 'react';
 
 export default function Home() {
   const [tick, setTick] = useState(0);
