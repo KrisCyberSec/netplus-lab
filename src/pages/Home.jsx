@@ -5,13 +5,18 @@ import {
   resetProgress,
   dismissWelcome,
   getStudyDayStats,
+  downloadProgressBackup,
+  importProgressJson,
 } from '../lib/progress';
 import { getCoachPlan } from '../lib/coach';
 import { STATUS_LABEL } from '../data/domains';
 import PageHeader from '../components/PageHeader';
+import ExamWeek from '../components/ExamWeek';
+import { useRef } from 'react';
 
 export default function Home() {
   const [tick, setTick] = useState(0);
+  const fileRef = useRef(null);
   const progress = useMemo(() => loadProgress(), [tick]);
   const coach = useMemo(() => getCoachPlan(progress), [progress]);
   const isFresh =
@@ -34,6 +39,23 @@ export default function Home() {
   function handleDismissWelcome() {
     dismissWelcome();
     refresh();
+  }
+
+  function handleImport(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = importProgressJson(String(reader.result || ''));
+      if (!result.ok) {
+        window.alert(result.error || 'Import failed.');
+        return;
+      }
+      window.alert('Backup restored.');
+      refresh();
+    };
+    reader.readAsText(file);
+    e.target.value = '';
   }
 
   const { primary, suggestions, path, stats, domainStats } = coach;
@@ -184,8 +206,12 @@ export default function Home() {
               <span className="value">{study.count}</span>
             </div>
             <div className="stat">
-              <span className="label">Active misses</span>
+              <span className="label">Open misses</span>
               <span className="value">{stats.activeMisses}</span>
+            </div>
+            <div className="stat">
+              <span className="label">Spaced due</span>
+              <span className="value">{stats.spacedDue ?? 0}</span>
             </div>
             <div className="stat">
               <span className="label">Mastered</span>
@@ -229,6 +255,19 @@ export default function Home() {
             <button type="button" className="btn btn-ghost" onClick={refresh}>
               Refresh stats
             </button>
+            <button type="button" className="btn" onClick={() => downloadProgressBackup()}>
+              Export backup
+            </button>
+            <button type="button" className="btn" onClick={() => fileRef.current?.click()}>
+              Import backup
+            </button>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="application/json,.json"
+              hidden
+              onChange={handleImport}
+            />
             <button type="button" className="btn btn-ghost" onClick={handleReset}>
               Reset all progress
             </button>
@@ -283,7 +322,11 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Compact path preview — current phase only if in progress */}
+      <div style={{ marginTop: '1.25rem' }}>
+        <ExamWeek onChange={refresh} />
+      </div>
+
+      {/* Compact path preview */}
       <section style={{ marginTop: '1.25rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
           <h2 style={{ fontSize: '1.1rem', margin: '0 0 0.65rem' }}>Learning path</h2>

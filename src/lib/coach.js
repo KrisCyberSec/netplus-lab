@@ -162,15 +162,28 @@ export function getCoachPlan(progress) {
   // --- Primary action (single best next thing) ---
   let primary = null;
 
-  // 1. Miss bank first if it's growing — learning loop beats advancing path
-  if (learn.activeCount >= 5) {
+  // 1. Miss bank / spaced due first — learning loop beats advancing path
+  if ((learn.dueCount || learn.activeCount) >= 5) {
     primary = {
       type: 'review',
-      title: 'Review your miss bank',
-      detail: `You have ${learn.activeCount} active misses. Clearing these raises scores faster than new content.`,
+      title: 'Review due items',
+      detail: `${learn.activeCount} open miss${learn.activeCount === 1 ? '' : 'es'}${
+        learn.spacedDueCount
+          ? ` · ${learn.spacedDueCount} spaced review${learn.spacedDueCount === 1 ? '' : 's'} due`
+          : ''
+      }. Clearing these raises scores faster than new content.`,
       href: '/review',
-      cta: 'Review misses',
+      cta: 'Review now',
       reason: 'Study loop priority',
+    };
+  } else if (learn.spacedDueCount > 0 && learn.activeCount < 3) {
+    primary = {
+      type: 'review',
+      title: 'Spaced review due',
+      detail: `${learn.spacedDueCount} mastered item${learn.spacedDueCount === 1 ? '' : 's'} came back for a check (1/3/7/14-day schedule). Keep them sticky.`,
+      href: '/review',
+      cta: 'Spaced review',
+      reason: 'Spaced repetition',
     };
   } else if (learn.lastSession?.missedIds?.length >= 3) {
     primary = {
@@ -203,6 +216,15 @@ export function getCoachPlan(progress) {
   }
 
   // --- Suggestions (how to get better) ---
+  if (learn.spacedDueCount > 0 && primary.type !== 'review') {
+    suggestions.push({
+      severity: 'high',
+      title: `${learn.spacedDueCount} spaced review${learn.spacedDueCount === 1 ? '' : 's'} due`,
+      body: 'Mastered items return on a 1 → 3 → 7 → 14 day schedule so they do not fade before exam day.',
+      href: '/review',
+      action: 'Review',
+    });
+  }
   if (learn.activeCount > 0 && primary.type !== 'review') {
     suggestions.push({
       severity: 'high',
@@ -347,7 +369,9 @@ export function getCoachPlan(progress) {
       lastActiveLabel: study.lastActiveLabel,
       timezone: study.timezone,
       activeMisses: learn.activeCount,
+      spacedDue: learn.spacedDueCount || 0,
       mastered: learn.masteredCount,
     },
+    learn,
   };
 }

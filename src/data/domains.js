@@ -63,7 +63,9 @@ export const DRILL_META = {
   quiz: { path: '/quiz', label: 'Practice Quiz', icon: '?' },
   mock: { path: '/mock', label: 'Mock Exam', icon: '⏱' },
   scenarios: { path: '/scenarios', label: 'Scenarios', icon: '⚑' },
+  pbq: { path: '/pbq', label: 'Multi-step', icon: '⧉' },
   tools: { path: '/tools', label: 'Tool Picker', icon: '⚒' },
   sheets: { path: '/sheets', label: 'Cheatsheets', icon: '≡' },
+  checklist: { path: '/checklist', label: 'Objectives', icon: '☑' },
   coverage: { path: '/coverage', label: 'Coverage', icon: '◎' },
 };

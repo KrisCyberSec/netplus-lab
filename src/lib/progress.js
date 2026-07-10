@@ -29,8 +29,30 @@ const defaultState = () => ({
     lastActive: null,
     welcomeDismissed: false,
   },
+  /** Official topic checklist: id -> 'done' | 'learning' | unset */
+  checklist: {},
+  /** Multi-step PBQ scenario completion */
+  multiStep: { completedIds: [], attempted: 0, correctSteps: 0 },
+  /** Optional exam date ISO date (local day) for exam-week plan */
+  examDate: null,
   lastVisited: null,
 });
+
+/** SRS intervals in days after each successful mastery review */
+export const SPACED_INTERVALS_DAYS = [1, 3, 7, 14];
+
+export function spacedDueAt(fromIso, intervalIndex) {
+  const days = SPACED_INTERVALS_DAYS[Math.min(intervalIndex, SPACED_INTERVALS_DAYS.length - 1)];
+  const d = new Date(fromIso || Date.now());
+  d.setDate(d.getDate() + days);
+  return d.toISOString();
+}
+
+export function isSpacedDue(item, now = Date.now()) {
+  if (!item?.mastered) return false;
+  if (!item.dueAt) return true; // legacy mastered items — due for a spaced pass
+  return Date.parse(item.dueAt) <= now;
+}
 
 export function loadProgress() {
   const base = defaultState();
@@ -67,6 +89,9 @@ export function loadProgress() {
         visitedStepIds: parsed.path?.visitedStepIds || base.path.visitedStepIds,
         studyDays: parsed.path?.studyDays || base.path.studyDays,
       },
+      checklist: { ...base.checklist, ...parsed.checklist },
+      multiStep: { ...base.multiStep, ...parsed.multiStep },
+      examDate: parsed.examDate ?? null,
     };
     // Always run until version 3 (earlier migrations left UTC twins in place)
     if ((state.path.studyDaysVersion || 0) < 3) {
@@ -326,13 +351,14 @@ export function recordQuizAnswer(domain, correct) {
 }
 
 /**
- * Record a question-level learning event into the miss bank.
+ * Record a question-level learning event into the miss bank (+ spaced mastery).
  * @param {{ id: string, domain: number, kind?: string, correct: boolean, prompt?: string }} evt
  */
 export function recordLearnEvent(evt) {
   const state = loadProgress();
   const bank = { ...(state.learn?.bank || {}) };
   const now = new Date().toISOString();
+  const nowMs = Date.now();
   const prev = bank[evt.id] || {
     id: evt.id,
     domain: evt.domain,
@@ -341,6 +367,9 @@ export function recordLearnEvent(evt) {
     seenCount: 0,
     correctStreak: 0,
     mastered: false,
+    masteredAt: null,
+    dueAt: null,
+    intervalIndex: 0,
     lastMissed: null,
     lastSeen: null,
     prompt: evt.prompt || '',
@@ -355,22 +384,39 @@ export function recordLearnEvent(evt) {
     prompt: evt.prompt || prev.prompt || '',
   };
 
+  const wasSpacedDue = prev.mastered && isSpacedDue(prev, nowMs);
+
   if (evt.correct) {
     next.correctStreak = (prev.correctStreak || 0) + 1;
-    // Two correct in a row after being in the bank masters the item
-    if (next.missCount > 0 && next.correctStreak >= 2) {
+
+    if (wasSpacedDue) {
+      // Successful spaced review → longer interval
+      const idx = Math.min((prev.intervalIndex || 0) + 1, SPACED_INTERVALS_DAYS.length - 1);
       next.mastered = true;
+      next.intervalIndex = idx;
+      next.masteredAt = now;
+      next.dueAt = spacedDueAt(now, idx);
+      next.correctStreak = 0; // reset streak between spaced cycles
+    } else if (!prev.mastered && next.missCount > 0 && next.correctStreak >= 2) {
+      // First mastery: due again in 1 day
+      next.mastered = true;
+      next.masteredAt = now;
+      next.intervalIndex = 0;
+      next.dueAt = spacedDueAt(now, 0);
     }
   } else {
     next.missCount = (prev.missCount || 0) + 1;
     next.correctStreak = 0;
     next.mastered = false;
+    next.masteredAt = null;
+    next.dueAt = null;
+    next.intervalIndex = 0;
     next.lastMissed = now;
   }
 
   bank[evt.id] = next;
 
-  const masteredCount = Object.values(bank).filter((i) => i.mastered).length;
+  const masteredCount = Object.values(bank).filter((i) => i.mastered && !isSpacedDue(i, nowMs)).length;
   state.learn = {
     ...(state.learn || {}),
     bank,
@@ -406,21 +452,31 @@ export function recordStudySession(session) {
   return state;
 }
 
-/** Active (not mastered) misses, prioritized for review. */
+/**
+ * Review queue: open misses + spaced-due mastered items.
+ * Active misses first, then due spaced reviews.
+ */
 export function getReviewQueue() {
   const { learn } = loadProgress();
-  const items = Object.values(learn?.bank || {}).filter(
-    (i) => i.missCount > 0 && !i.mastered,
-  );
+  const now = Date.now();
+  const items = Object.values(learn?.bank || {})
+    .filter((i) => i.missCount > 0)
+    .map((i) => ({
+      ...i,
+      spacedDue: isSpacedDue(i, now),
+      openMiss: !i.mastered,
+    }))
+    .filter((i) => i.openMiss || i.spacedDue);
 
-  // Priority: more misses first, then older lastMissed (spaced), then lower correct streak
   return items.sort((a, b) => {
+    // Open misses before spaced reviews
+    if (a.openMiss !== b.openMiss) return a.openMiss ? -1 : 1;
     if (b.missCount !== a.missCount) return b.missCount - a.missCount;
     if ((a.correctStreak || 0) !== (b.correctStreak || 0)) {
       return (a.correctStreak || 0) - (b.correctStreak || 0);
     }
-    const ta = a.lastMissed ? Date.parse(a.lastMissed) : 0;
-    const tb = b.lastMissed ? Date.parse(b.lastMissed) : 0;
+    const ta = a.dueAt ? Date.parse(a.dueAt) : a.lastMissed ? Date.parse(a.lastMissed) : 0;
+    const tb = b.dueAt ? Date.parse(b.dueAt) : b.lastMissed ? Date.parse(b.lastMissed) : 0;
     return ta - tb;
   });
 }
@@ -428,15 +484,20 @@ export function getReviewQueue() {
 export function getLearnStats() {
   const { learn } = loadProgress();
   const bank = Object.values(learn?.bank || {});
-  const active = bank.filter((i) => i.missCount > 0 && !i.mastered);
-  const mastered = bank.filter((i) => i.mastered);
+  const now = Date.now();
+  const open = bank.filter((i) => i.missCount > 0 && !i.mastered);
+  const spacedDue = bank.filter((i) => i.missCount > 0 && isSpacedDue(i, now));
+  const masteredResting = bank.filter((i) => i.mastered && !isSpacedDue(i, now));
   const byDomain = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
-  for (const i of active) {
+  for (const i of open) {
     if (byDomain[i.domain] != null) byDomain[i.domain] += 1;
   }
   return {
-    activeCount: active.length,
-    masteredCount: mastered.length,
+    activeCount: open.length,
+    spacedDueCount: spacedDue.length,
+    /** Total items that need attention now (open + spaced due) */
+    dueCount: open.length + spacedDue.length,
+    masteredCount: masteredResting.length,
     totalTracked: bank.filter((i) => i.missCount > 0).length,
     byDomain,
     lastSession: learn?.lastSession || null,
@@ -516,4 +577,138 @@ export function resetProgress() {
 export function accuracy(slice) {
   if (!slice || !slice.attempted) return null;
   return Math.round((slice.correct / slice.attempted) * 100);
+}
+
+/* ---- Checklist ---- */
+
+export function setChecklistStatus(topicId, status) {
+  const state = loadProgress();
+  const checklist = { ...(state.checklist || {}) };
+  if (!status) delete checklist[topicId];
+  else checklist[topicId] = status; // 'done' | 'learning'
+  state.checklist = checklist;
+  saveProgress(state);
+  return state;
+}
+
+export function getChecklistStats() {
+  const state = loadProgress();
+  const checklist = state.checklist || {};
+  let done = 0;
+  let learning = 0;
+  for (const v of Object.values(checklist)) {
+    if (v === 'done') done += 1;
+    else if (v === 'learning') learning += 1;
+  }
+  return { done, learning, checklist };
+}
+
+/* ---- Multi-step scenarios ---- */
+
+export function recordMultiStepProgress({ id, correct, finished }) {
+  const state = loadProgress();
+  const m = { ...(state.multiStep || { completedIds: [], attempted: 0, correctSteps: 0 }) };
+  m.attempted = (m.attempted || 0) + 1;
+  if (correct) m.correctSteps = (m.correctSteps || 0) + 1;
+  if (finished && correct) {
+    const set = new Set(m.completedIds || []);
+    set.add(id);
+    m.completedIds = [...set];
+  }
+  state.multiStep = m;
+  touchStudyActivity(state);
+  saveProgress(state);
+  return state;
+}
+
+/* ---- Exam date ---- */
+
+export function setExamDate(dayKeyOrNull) {
+  const state = loadProgress();
+  state.examDate = dayKeyOrNull || null;
+  saveProgress(state);
+  return state;
+}
+
+export function getExamCountdown(progress) {
+  const p = progress || loadProgress();
+  if (!p.examDate) return null;
+  const [y, m, d] = p.examDate.split('-').map(Number);
+  if (!y || !m || !d) return null;
+  const exam = new Date(y, m - 1, d, 12, 0, 0);
+  const now = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 12, 0, 0);
+  const diffMs = exam.getTime() - start.getTime();
+  const days = Math.round(diffMs / (24 * 60 * 60 * 1000));
+  return {
+    examDate: p.examDate,
+    daysUntil: days,
+    label: formatLocalDay(p.examDate),
+    inExamWeek: days >= 0 && days <= 7,
+    past: days < 0,
+  };
+}
+
+/* ---- Export / import ---- */
+
+export function exportProgressJson() {
+  const state = loadProgress();
+  return JSON.stringify(
+    {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      app: 'netplus-lab',
+      progress: state,
+    },
+    null,
+    2,
+  );
+}
+
+export function downloadProgressBackup() {
+  const json = exportProgressJson();
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const day = localDayKey();
+  a.href = url;
+  a.download = `netplus-lab-backup-${day}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+/**
+ * Import a backup. Merges carefully: full replace of progress payload.
+ * @returns {{ ok: boolean, error?: string }}
+ */
+export function importProgressJson(text) {
+  try {
+    const data = JSON.parse(text);
+    const payload = data.progress || data;
+    if (!payload || typeof payload !== 'object') {
+      return { ok: false, error: 'Invalid backup file (no progress object).' };
+    }
+    // Minimal shape check
+    if (!payload.quiz && !payload.learn && !payload.path) {
+      return { ok: false, error: 'File does not look like a NetPlus Lab backup.' };
+    }
+    const base = defaultState();
+    const merged = {
+      ...base,
+      ...payload,
+      quiz: { ...base.quiz, ...payload.quiz },
+      learn: { ...base.learn, ...payload.learn, bank: { ...payload.learn?.bank } },
+      path: { ...base.path, ...payload.path },
+      checklist: { ...payload.checklist },
+      multiStep: { ...base.multiStep, ...payload.multiStep },
+      examDate: payload.examDate ?? null,
+    };
+    if ((merged.path.studyDaysVersion || 0) < 3) cleanupStudyDays(merged);
+    saveProgress(merged);
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, error: e.message || 'Could not parse JSON.' };
+  }
 }

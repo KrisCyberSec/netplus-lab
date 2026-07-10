@@ -12,6 +12,8 @@ import MockExam from './pages/MockExam';
 import Cheatsheets from './pages/Cheatsheets';
 import ReviewMisses from './pages/ReviewMisses';
 import Path from './pages/Path';
+import MultiStep from './pages/MultiStep';
+import Checklist from './pages/Checklist';
 
 // HashRouter works on GitHub Pages without a custom 404 rewrite.
 const Router = import.meta.env.PROD ? HashRouter : BrowserRouter;
@@ -30,8 +32,10 @@ export default function App() {
           <Route path="quiz" element={<Quiz />} />
           <Route path="mock" element={<MockExam />} />
           <Route path="scenarios" element={<Scenarios />} />
+          <Route path="pbq" element={<MultiStep />} />
           <Route path="tools" element={<ToolsDrill />} />
           <Route path="sheets" element={<Cheatsheets />} />
+          <Route path="checklist" element={<Checklist />} />
           <Route path="coverage" element={<Coverage />} />
         </Route>
       </Routes>

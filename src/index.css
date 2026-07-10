@@ -263,6 +263,107 @@ code,
   }
 }
 
+.checklist {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.checklist-row {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1.5rem 3.25rem 1fr auto;
+  gap: 0.55rem;
+  align-items: center;
+  text-align: left;
+  padding: 0.55rem 0.65rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.checklist-row:hover {
+  border-color: var(--accent);
+}
+
+.checklist-row.done {
+  border-color: rgba(52, 211, 153, 0.35);
+}
+
+.checklist-row.learning {
+  border-color: rgba(251, 191, 36, 0.35);
+}
+
+.check-box {
+  font-family: var(--mono);
+  color: var(--accent);
+}
+
+.check-id {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+}
+
+.check-title {
+  font-size: 0.9rem;
+}
+
+.exam-week-card {
+  border-color: rgba(167, 139, 250, 0.35);
+}
+
+.exam-plan-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  margin-top: 1rem;
+}
+
+.exam-plan-day {
+  padding: 0.75rem 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-elevated);
+}
+
+.exam-plan-day.today {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+
+.exam-plan-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.exam-plan-day ul {
+  margin: 0;
+  padding-left: 1.1rem;
+  color: var(--text-muted);
+  font-size: 0.88rem;
+}
+
+.exam-plan-day li {
+  margin-bottom: 0.2rem;
+}
+
+.field input[type='date'] {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.55rem 0.65rem;
+  color: var(--text);
+  font-family: var(--mono);
+}
+
 .brand {
   display: flex;
   align-items: center;

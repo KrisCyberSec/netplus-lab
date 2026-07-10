@@ -115,8 +115,8 @@ export default function ReviewMisses() {
       <>
         <PageHeader eyebrow="Study loop" title="Review misses">
           <p>
-            Nothing here yet. Wrong answers from quizzes and mocks land in this bank. Get each
-            item right <strong>twice in a row</strong> to master it.
+            Nothing due right now. Wrong answers land here; master with 2 correct in a row. Mastered
+            items return later on a 1 → 3 → 7 → 14 day spaced schedule.
           </p>
         </PageHeader>
         <div className="card">
@@ -180,9 +180,12 @@ export default function ReviewMisses() {
     <>
       <PageHeader eyebrow="Study loop · Learn from mistakes" title="Review misses">
         <p>
-          Active: {stats.activeCount} · Mastered: {stats.masteredCount}
+          Open misses: {stats.activeCount}
+          {stats.spacedDueCount ? ` · Spaced due: ${stats.spacedDueCount}` : ''}
+          {' · '}
+          Mastered resting: {stats.masteredCount}
           {sessionOnly ? ' · Last session only' : ''}
-          . Keys: 1–4, Enter next.
+          . Keys: 1–4, Enter next. Mastered items return at 1 → 3 → 7 → 14 days.
         </p>
       </PageHeader>
 
@@ -232,10 +235,14 @@ export default function ReviewMisses() {
               {current.objective ? ` · ${current.objective}` : ''}
             </span>
             <span className="timer">
-              Missed {learnMeta?.missCount || '?'}×
-              {learnMeta?.correctStreak
-                ? ` · streak ${learnMeta.correctStreak}/2 to master`
-                : ' · streak 0/2 to master'}
+              {learnMeta?.spacedDue || (learnMeta?.mastered && learnMeta?.dueAt)
+                ? 'Spaced review'
+                : `Missed ${learnMeta?.missCount || '?'}×`}
+              {learnMeta?.mastered
+                ? ` · interval ${[1, 3, 7, 14][Math.min(learnMeta.intervalIndex || 0, 3)] || 1}d`
+                : learnMeta?.correctStreak
+                  ? ` · streak ${learnMeta.correctStreak}/2 to master`
+                  : ' · streak 0/2 to master'}
             </span>
           </div>
           <div className="progress-bar">
@@ -269,7 +276,9 @@ export default function ReviewMisses() {
               {(() => {
                 if (!picked.correct) return 'Still learning this one. Saved back to the bank.';
                 const entry = progress.learn?.bank?.[current.id];
-                if (entry?.mastered) return 'Correct — mastered. This one is sticking.';
+                if (entry?.mastered && entry?.dueAt)
+                  return 'Correct — spaced interval extended. It will return later for another check.';
+                if (entry?.mastered) return 'Correct — mastered. Due again soon for spaced review.';
                 if ((entry?.correctStreak || 0) >= 1)
                   return 'Correct — one more right in a row will master it.';
                 return 'Correct.';

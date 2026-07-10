@@ -6,8 +6,8 @@ import { useEffect, useMemo, useState } from 'react';
 import ScrollToTop from './ScrollToTop';
 
 const LEARN = ['home', 'path', 'review'];
-const PRACTICE = ['subnet', 'ports', 'osi', 'quiz', 'mock', 'scenarios', 'tools'];
-const REF = ['sheets', 'coverage'];
+const PRACTICE = ['subnet', 'ports', 'osi', 'quiz', 'mock', 'scenarios', 'pbq', 'tools'];
+const REF = ['sheets', 'checklist', 'coverage'];
 
 function NavSection({ title, keys, badgeFor, onNavigate }) {
   return (
@@ -45,7 +45,10 @@ export default function Layout() {
       loadProgress();
       const learn = getLearnStats();
       const path = getPathStatus();
-      return { missCount: learn.activeCount, pathPercent: path.percent };
+      return {
+        missCount: learn.dueCount || learn.activeCount,
+        pathPercent: path.percent,
+      };
     } catch {
       return { missCount: 0, pathPercent: 0 };
     }
