@@ -2,7 +2,7 @@
 
 **Free CompTIA Network+ (N10-009) practice drills in the browser.**
 
-Interactive subnetting, port recall, OSI map, domain-tagged quizzes, fault scenarios, and a tool picker. Local-first progress. Open for community question PRs.
+Guided study path, coach suggestions, subnetting, ports, OSI, quizzes, mock exams, scenarios, and a miss-bank review loop. Progress stays in your browser (local-first).
 
 > Not affiliated with CompTIA. Network+ is a registered trademark of CompTIA. Always use the [official exam objectives](https://www.comptia.org/en-us/certifications/network/) as the source of truth.
 
@@ -10,7 +10,11 @@ Interactive subnetting, port recall, OSI map, domain-tagged quizzes, fault scena
 
 ## Live demo
 
-After you enable GitHub Pages (or run locally):
+**https://kriscybersec.github.io/netplus-lab/**
+
+(GitHub Pages — deploys automatically from `main`.)
+
+### Run locally
 
 ```bash
 npm install
