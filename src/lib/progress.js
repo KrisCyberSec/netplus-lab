@@ -175,29 +175,34 @@ export function dismissWelcome() {
 }
 
 /**
- * One-time cleanup: if study-day keys were stored as UTC and inflated the count,
- * re-stamp today as local only when user is clearly mid-session (optional soft fix).
- * Safe: never deletes days unless they look like pure UTC-next-day duplicates of today.
+ * One-time cleanup for days stamped with UTC (toISOString).
+ * Evening US sessions often got “tomorrow” as an extra study day.
+ * Maps each stored key: if it equals the UTC day of lastActive but not the local day,
+ * replace with the local day. Ensures lastActive’s local day is present.
  */
 export function normalizeStudyDaysToLocal(state) {
   const path = state.path || {};
   if (path.studyDaysLocal) return state;
-  const today = localDayKey();
+
   const raw = [...(path.studyDays || [])];
-  if (raw.length === 0) {
-    state.path = { ...path, studyDaysLocal: true };
-    return state;
-  }
-  // Keep existing keys (they may already be correct) but ensure today's local day is present
-  // if there was any activity, and flag as local going forward.
-  const set = new Set(raw);
-  if (path.lastActive) {
-    const last = new Date(path.lastActive);
-    if (!Number.isNaN(last.getTime())) {
-      set.add(localDayKey(last));
+  const last = path.lastActive ? new Date(path.lastActive) : null;
+  const lastValid = last && !Number.isNaN(last.getTime()) ? last : null;
+  const lastLocal = lastValid ? localDayKey(lastValid) : null;
+  const lastUtc = lastValid ? lastValid.toISOString().slice(0, 10) : null;
+
+  const set = new Set();
+  for (const key of raw) {
+    if (!key) continue;
+    // Drop pure UTC twin of last activity when it differs from local calendar day
+    if (lastUtc && lastLocal && key === lastUtc && key !== lastLocal) {
+      set.add(lastLocal);
+      continue;
     }
+    set.add(key);
   }
-  set.add(today);
+  if (lastLocal) set.add(lastLocal);
+
+  // Do not force “today” unless there is already activity — avoids +1 on mere page load
   state.path = {
     ...path,
     studyDays: [...set].sort().slice(-120),
