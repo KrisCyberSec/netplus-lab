@@ -4,7 +4,6 @@ import {
   loadProgress,
   resetProgress,
   dismissWelcome,
-  recalculateStudyDays,
   getStudyDayStats,
 } from '../lib/progress';
 import { getCoachPlan } from '../lib/coach';
@@ -30,11 +29,6 @@ export default function Home() {
       resetProgress();
       refresh();
     }
-  }
-
-  function handleFixDays() {
-    recalculateStudyDays();
-    refresh();
   }
 
   function handleDismissWelcome() {
@@ -234,9 +228,6 @@ export default function Home() {
           <div className="btn-row">
             <button type="button" className="btn btn-ghost" onClick={refresh}>
               Refresh stats
-            </button>
-            <button type="button" className="btn btn-ghost" onClick={handleFixDays}>
-              Fix day count
             </button>
             <button type="button" className="btn btn-ghost" onClick={handleReset}>
               Reset all progress
