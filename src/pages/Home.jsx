@@ -1,6 +1,12 @@
 import { Link } from 'react-router-dom';
 import { useMemo, useState } from 'react';
-import { loadProgress, resetProgress, dismissWelcome } from '../lib/progress';
+import {
+  loadProgress,
+  resetProgress,
+  dismissWelcome,
+  recalculateStudyDays,
+  getStudyDayStats,
+} from '../lib/progress';
 import { getCoachPlan } from '../lib/coach';
 import { STATUS_LABEL } from '../data/domains';
 import PageHeader from '../components/PageHeader';
@@ -26,12 +32,18 @@ export default function Home() {
     }
   }
 
+  function handleFixDays() {
+    recalculateStudyDays();
+    refresh();
+  }
+
   function handleDismissWelcome() {
     dismissWelcome();
     refresh();
   }
 
   const { primary, suggestions, path, stats, domainStats } = coach;
+  const study = useMemo(() => getStudyDayStats(progress), [progress]);
   const showWelcome = isFresh || !progress.path?.welcomeDismissed;
 
   return (
@@ -164,9 +176,18 @@ export default function Home() {
         <div className="card">
           <h2>Your numbers</h2>
           <div className="stat-row">
-            <div className="stat" title={stats.timezone ? `Local calendar days (${stats.timezone})` : undefined}>
+            <div
+              className="stat"
+              title={
+                study.dayLabels?.length
+                  ? study.dayLabels.join(' · ')
+                  : stats.timezone
+                    ? `Local calendar days (${stats.timezone})`
+                    : undefined
+              }
+            >
               <span className="label">Days practiced</span>
-              <span className="value">{stats.studyDays}</span>
+              <span className="value">{study.count}</span>
             </div>
             <div className="stat">
               <span className="label">Active misses</span>
@@ -196,18 +217,26 @@ export default function Home() {
             </div>
           </div>
           <p className="muted" style={{ margin: '0.75rem 0 0', fontSize: '0.85rem' }}>
-            {stats.lastActiveLabel
-              ? `Last activity: ${stats.lastActiveLabel}`
-              : 'No activity stamped yet — do one drill and it will show here.'}
-            {stats.timezone ? ` · ${stats.timezone}` : ''}
+            {study.lastActiveLabel
+              ? `Last practice: ${study.lastActiveLabel}`
+              : 'No practice stamped yet — answer a quiz or drill once.'}
+            {study.timezone ? ` · ${study.timezone}` : ''}
           </p>
-          <p className="save-note" style={{ marginTop: '0.35rem' }}>
-            “Days practiced” = distinct local calendar days with any practice (not session length).
-            Saved in this browser only.
+          {study.dayLabels?.length > 0 && (
+            <p className="save-note" style={{ marginTop: '0.35rem' }}>
+              Counted day{study.count === 1 ? '' : 's'}: {study.dayLabels.join(' · ')}
+            </p>
+          )}
+          <p className="save-note" style={{ marginTop: '0.25rem' }}>
+            Days practiced = local calendar days with real practice (quiz, subnet, etc.), not page
+            views or session length.
           </p>
           <div className="btn-row">
             <button type="button" className="btn btn-ghost" onClick={refresh}>
               Refresh stats
+            </button>
+            <button type="button" className="btn btn-ghost" onClick={handleFixDays}>
+              Fix day count
             </button>
             <button type="button" className="btn btn-ghost" onClick={handleReset}>
               Reset all progress
