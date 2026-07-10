@@ -164,8 +164,8 @@ export default function Home() {
         <div className="card">
           <h2>Your numbers</h2>
           <div className="stat-row">
-            <div className="stat">
-              <span className="label">Study days</span>
+            <div className="stat" title={stats.timezone ? `Local calendar days (${stats.timezone})` : undefined}>
+              <span className="label">Days practiced</span>
               <span className="value">{stats.studyDays}</span>
             </div>
             <div className="stat">
@@ -195,6 +195,16 @@ export default function Home() {
               </span>
             </div>
           </div>
+          <p className="muted" style={{ margin: '0.75rem 0 0', fontSize: '0.85rem' }}>
+            {stats.lastActiveLabel
+              ? `Last activity: ${stats.lastActiveLabel}`
+              : 'No activity stamped yet — do one drill and it will show here.'}
+            {stats.timezone ? ` · ${stats.timezone}` : ''}
+          </p>
+          <p className="save-note" style={{ marginTop: '0.35rem' }}>
+            “Days practiced” = distinct local calendar days with any practice (not session length).
+            Saved in this browser only.
+          </p>
           <div className="btn-row">
             <button type="button" className="btn btn-ghost" onClick={refresh}>
               Refresh stats
@@ -203,7 +213,6 @@ export default function Home() {
               Reset all progress
             </button>
           </div>
-          <p className="save-note">Local only — clearing browser data wipes progress.</p>
         </div>
 
         <div className="card">

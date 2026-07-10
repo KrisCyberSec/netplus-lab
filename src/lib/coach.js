@@ -1,6 +1,6 @@
 import { STUDY_PHASES, allSteps } from '../data/studyPath';
 import { DOMAINS } from '../data/domains';
-import { loadProgress, accuracy, getLearnStats } from './progress';
+import { loadProgress, accuracy, getLearnStats, getStudyDayStats } from './progress';
 import { getWeakDomains } from './weakDomains';
 
 function acc(slice) {
@@ -297,13 +297,15 @@ export function getCoachPlan(progress) {
     });
   }
 
-  // Study streak / consistency
-  const days = p.path?.studyDays || [];
-  if (days.length >= 2) {
+  // Study streak / consistency (local calendar days)
+  const study = getStudyDayStats(p);
+  if (study.count >= 2) {
     suggestions.push({
       severity: 'low',
-      title: `${days.length} study days logged`,
-      body: 'Consistency beats cramming. Even a 15-minute review session counts.',
+      title: `${study.count} local days with practice`,
+      body: study.lastActiveLabel
+        ? `Last activity ${study.lastActiveLabel} (${study.timezone}). Consistency beats cramming.`
+        : 'Consistency beats cramming. Even a short review session counts.',
       href: null,
       action: null,
     });
@@ -311,7 +313,7 @@ export function getCoachPlan(progress) {
     suggestions.push({
       severity: 'low',
       title: 'Build a daily habit',
-      body: 'Short daily sessions (miss review + one path step) beat weekend marathons.',
+      body: 'Short sessions on separate calendar days add up. Come back tomorrow to grow the count.',
       href: path.nextStep?.href || '/review',
       action: 'Continue',
     });
@@ -340,7 +342,10 @@ export function getCoachPlan(progress) {
       portsAcc: acc(p.ports),
       mockBest: p.mock?.bestScore ?? null,
       mockAttempts: p.mock?.attempts || 0,
-      studyDays: days.length,
+      studyDays: study.count,
+      studyDaysLabel: study.lastDayLabel,
+      lastActiveLabel: study.lastActiveLabel,
+      timezone: study.timezone,
       activeMisses: learn.activeCount,
       mastered: learn.masteredCount,
     },

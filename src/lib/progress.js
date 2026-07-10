@@ -38,7 +38,7 @@ export function loadProgress() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return base;
     const parsed = JSON.parse(raw);
-    return {
+    const state = {
       ...base,
       ...parsed,
       subnet: { ...base.subnet, ...parsed.subnet },
@@ -68,6 +68,17 @@ export function loadProgress() {
         studyDays: parsed.path?.studyDays || base.path.studyDays,
       },
     };
+    // Migrate UTC day keys → local once (see normalizeStudyDaysToLocal)
+    if (!state.path.studyDaysLocal && (state.path.studyDays?.length || state.path.lastActive)) {
+      normalizeStudyDaysToLocal(state);
+      // Persist migration quietly so the count stabilizes
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch {
+        /* ignore quota */
+      }
+    }
+    return state;
   } catch {
     return base;
   }
@@ -77,34 +88,121 @@ export function saveProgress(state) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
 
-function todayKey() {
-  return new Date().toISOString().slice(0, 10);
+/** Local calendar day YYYY-MM-DD (not UTC — avoids false “2 days” overnight). */
+export function localDayKey(date = new Date()) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
 }
 
-/** Stamp a study day + last active (habit tracking). */
-export function touchStudyActivity(state) {
-  const day = todayKey();
-  const days = new Set(state.path?.studyDays || []);
-  days.add(day);
-  state.path = {
-    visitedStepIds: state.path?.visitedStepIds || [],
-    studyDays: [...days].sort().slice(-120),
-    lastActive: new Date().toISOString(),
+/** Friendly local date/time for display. */
+export function formatLocalDateTime(isoOrDate) {
+  if (!isoOrDate) return null;
+  const date = typeof isoOrDate === 'string' ? new Date(isoOrDate) : isoOrDate;
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toLocaleString(undefined, {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}
+
+export function formatLocalDay(dayKey) {
+  if (!dayKey || !/^\d{4}-\d{2}-\d{2}$/.test(dayKey)) return dayKey;
+  const [y, m, d] = dayKey.split('-').map(Number);
+  const date = new Date(y, m - 1, d);
+  return date.toLocaleDateString(undefined, {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+}
+
+/**
+ * Study-day stats for the coach UI.
+ * Count = unique local calendar days with any practice activity.
+ */
+export function getStudyDayStats(progress) {
+  const p = progress || loadProgress();
+  const days = [...(p.path?.studyDays || [])].filter(Boolean).sort();
+  const lastActive = p.path?.lastActive || p.lastVisited || null;
+  return {
+    count: days.length,
+    days,
+    lastActive,
+    lastActiveLabel: formatLocalDateTime(lastActive),
+    lastDayKey: days.length ? days[days.length - 1] : null,
+    lastDayLabel: days.length ? formatLocalDay(days[days.length - 1]) : null,
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'local',
   };
-  state.lastVisited = state.path.lastActive;
+}
+
+/** Stamp a study day + last active (habit tracking). Uses local calendar date. */
+export function touchStudyActivity(state) {
+  const day = localDayKey();
+  const prev = state.path || {};
+  const days = new Set(prev.studyDays || []);
+  days.add(day);
+  const now = new Date().toISOString();
+  state.path = {
+    ...prev,
+    visitedStepIds: prev.visitedStepIds || [],
+    studyDays: [...days].sort().slice(-120),
+    lastActive: now,
+    // Mark that days are local (for any future migrations)
+    studyDaysLocal: true,
+  };
+  state.lastVisited = now;
   return state;
 }
 
 export function dismissWelcome() {
   const state = loadProgress();
+  const prev = state.path || {};
   state.path = {
-    ...(state.path || {}),
-    visitedStepIds: state.path?.visitedStepIds || [],
-    studyDays: state.path?.studyDays || [],
+    ...prev,
+    visitedStepIds: prev.visitedStepIds || [],
+    studyDays: prev.studyDays || [],
     welcomeDismissed: true,
     lastActive: new Date().toISOString(),
   };
   saveProgress(state);
+  return state;
+}
+
+/**
+ * One-time cleanup: if study-day keys were stored as UTC and inflated the count,
+ * re-stamp today as local only when user is clearly mid-session (optional soft fix).
+ * Safe: never deletes days unless they look like pure UTC-next-day duplicates of today.
+ */
+export function normalizeStudyDaysToLocal(state) {
+  const path = state.path || {};
+  if (path.studyDaysLocal) return state;
+  const today = localDayKey();
+  const raw = [...(path.studyDays || [])];
+  if (raw.length === 0) {
+    state.path = { ...path, studyDaysLocal: true };
+    return state;
+  }
+  // Keep existing keys (they may already be correct) but ensure today's local day is present
+  // if there was any activity, and flag as local going forward.
+  const set = new Set(raw);
+  if (path.lastActive) {
+    const last = new Date(path.lastActive);
+    if (!Number.isNaN(last.getTime())) {
+      set.add(localDayKey(last));
+    }
+  }
+  set.add(today);
+  state.path = {
+    ...path,
+    studyDays: [...set].sort().slice(-120),
+    studyDaysLocal: true,
+  };
   return state;
 }
 
