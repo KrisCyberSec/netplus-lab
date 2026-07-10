@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { useMemo, useState } from 'react';
 import { loadProgress } from '../lib/progress';
 import { getPathStatus } from '../lib/coach';
+import PageHeader from '../components/PageHeader';
 
 export default function Path() {
   const [tick, setTick] = useState(0);
@@ -10,14 +11,12 @@ export default function Path() {
 
   return (
     <>
-      <header className="page-header">
-        <span className="eyebrow">Curriculum</span>
-        <h1>Study path</h1>
+      <PageHeader eyebrow="Curriculum" title="Study path">
         <p>
           Four phases from foundations to mock exams. Steps complete automatically when you hit
-          the goal (saved progress). Work top to bottom; jump ahead if you want.
+          each goal (not just by visiting). Work top to bottom; jump ahead anytime.
         </p>
-      </header>
+      </PageHeader>
 
       <div className="card" style={{ marginBottom: '1.25rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>

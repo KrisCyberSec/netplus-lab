@@ -27,6 +27,7 @@ const defaultState = () => ({
     visitedStepIds: [],
     studyDays: [],
     lastActive: null,
+    welcomeDismissed: false,
   },
   lastVisited: null,
 });
@@ -91,6 +92,19 @@ export function touchStudyActivity(state) {
     lastActive: new Date().toISOString(),
   };
   state.lastVisited = state.path.lastActive;
+  return state;
+}
+
+export function dismissWelcome() {
+  const state = loadProgress();
+  state.path = {
+    ...(state.path || {}),
+    visitedStepIds: state.path?.visitedStepIds || [],
+    studyDays: state.path?.studyDays || [],
+    welcomeDismissed: true,
+    lastActive: new Date().toISOString(),
+  };
+  saveProgress(state);
   return state;
 }
 

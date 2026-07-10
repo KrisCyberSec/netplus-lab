@@ -13,6 +13,8 @@ import {
 } from '../lib/progress';
 import { useChoiceKeys } from '../hooks/useChoiceKeys';
 import { usePathVisit } from '../hooks/usePathVisit';
+import PageHeader from '../components/PageHeader';
+import SessionDone from '../components/SessionDone';
 
 function prepareQuestions(n) {
   return buildWeightedMock(n).map((q) => ({
@@ -147,14 +149,12 @@ export default function MockExam() {
   if (phase === 'setup') {
     return (
       <>
-        <header className="page-header">
-          <span className="eyebrow">Domain-weighted · Timed</span>
-          <h1>Mock exam</h1>
+        <PageHeader eyebrow="Domain-weighted · Timed" title="Mock exam">
           <p>
-            Mixed questions weighted toward N10-009 domain percentages. Timer runs out = auto
-            submit. Keys: 1–4 answer, Enter next.
+            Mixed questions weighted like N10-009. Timer ends = auto-submit. Best after foundations
+            and a clear miss bank. Keys: 1–4, Enter next.
           </p>
-        </header>
+        </PageHeader>
 
         <div className="card">
           <h2>Choose a length</h2>
@@ -196,35 +196,36 @@ export default function MockExam() {
     const learn = getLearnStats();
     return (
       <>
-        <header className="page-header">
-          <span className="eyebrow">Results</span>
-          <h1>
-            {pct}% · {correct}/{questions.length}
-          </h1>
+        <PageHeader eyebrow="Results" title={`${pct}% · ${correct}/${questions.length}`}>
           <p>
             {pct >= 80
-              ? 'Strong pass-range performance for a study mock.'
+              ? 'Strong pass-range for a study mock. Keep reviewing misses so it sticks.'
               : pct >= 70
-                ? 'Borderline. Drill weak domains and review misses next.'
-                : 'Keep training. Review misses — that is how scores climb.'}
+                ? 'Borderline. Review misses and drill weak domains next.'
+                : 'Review misses first — that is how scores climb.'}
           </p>
-        </header>
+        </PageHeader>
 
         {missed > 0 && (
           <div className="card study-cta" style={{ marginBottom: '1rem' }}>
-            <h3>Study loop</h3>
+            <h3>Recommended next</h3>
             <p className="muted">
-              {missed} miss{missed === 1 ? '' : 'es'} from this exam are in your bank (
-              {learn.activeCount} active total). Review now to convert mistakes into memory.
+              {missed} miss{missed === 1 ? '' : 'es'} from this exam ({learn.activeCount} active in
+              bank). Review before starting new content.
             </p>
-            <div className="btn-row">
-              <Link className="btn btn-primary" to="/review?session=1">
-                Review these misses
-              </Link>
-              <Link className="btn" to="/review">
-                Full miss bank
-              </Link>
-            </div>
+            <SessionDone
+              primaryTo="/review?session=1"
+              primaryLabel="Review these misses"
+              secondaryTo="/"
+              secondaryLabel="Back to coach"
+              showCoach={false}
+            />
+          </div>
+        )}
+
+        {missed === 0 && (
+          <div className="card" style={{ marginBottom: '1rem' }}>
+            <SessionDone primaryTo="/" primaryLabel="Back to coach" showCoach={false} />
           </div>
         )}
 
@@ -255,7 +256,7 @@ export default function MockExam() {
             ))}
           </div>
           <div className="btn-row">
-            <button type="button" className="btn btn-primary" onClick={() => setPhase('setup')}>
+            <button type="button" className="btn" onClick={() => setPhase('setup')}>
               Back to setup
             </button>
             <button type="button" className="btn" onClick={start}>
@@ -353,7 +354,22 @@ export default function MockExam() {
             >
               Next
             </button>
-            <button type="button" className="btn btn-primary" onClick={finish}>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => {
+                const unanswered = questions.length - Object.keys(answers).length;
+                if (
+                  unanswered > 0 &&
+                  !window.confirm(
+                    `${unanswered} unanswered question${unanswered === 1 ? '' : 's'} will count as wrong. Submit anyway?`,
+                  )
+                ) {
+                  return;
+                }
+                finish();
+              }}
+            >
               Submit exam
             </button>
           </div>

@@ -10,6 +10,9 @@ import {
   accuracy,
 } from '../lib/progress';
 import { usePathVisit } from '../hooks/usePathVisit';
+import { Link } from 'react-router-dom';
+import PageHeader from '../components/PageHeader';
+import SessionDone from '../components/SessionDone';
 
 const EMPTY = { broadcast: '', mask: '', usableHosts: '', firstHost: '', lastHost: '' };
 
@@ -132,27 +135,28 @@ export default function SubnetDrill() {
     const pct = Math.round((timed.correct / Math.min(total, TIMED_TOTAL)) * 100);
     return (
       <>
-        <header className="page-header">
-          <span className="eyebrow">Timed challenge</span>
-          <h1>
-            {timed.correct}/{Math.min(timed.index, TIMED_TOTAL)} correct
-          </h1>
+        <PageHeader
+          eyebrow="Timed challenge"
+          title={`${timed.correct}/${Math.min(timed.index, TIMED_TOTAL)} correct`}
+        >
           <p>
             Score {pct}%.
             {progress.subnet.timedBest
               ? ` Best: ${progress.subnet.timedBest.score}% (${progress.subnet.timedBest.correct}/${progress.subnet.timedBest.total}).`
-              : ''}
+              : ''}{' '}
+            Path goal for timed mode is ≥70%.
           </p>
-        </header>
+        </PageHeader>
         <div className="card">
           <div className="btn-row">
             <button type="button" className="btn btn-primary" onClick={startTimed}>
               Try again
             </button>
             <button type="button" className="btn" onClick={() => setMode('practice')}>
-              Back to practice
+              Practice mode
             </button>
           </div>
+          <SessionDone primaryTo="/" primaryLabel="Back to coach" showCoach={false} />
         </div>
       </>
     );
@@ -160,38 +164,43 @@ export default function SubnetDrill() {
 
   return (
     <>
-      <header className="page-header">
-        <span className="eyebrow">Domain 1 · 5 · {mode === 'timed' ? 'Timed' : 'Practice'}</span>
-        <h1>Subnetting trainer</h1>
+      <PageHeader
+        eyebrow={`Domain 1 · 5 · ${mode === 'timed' ? 'Timed' : 'Practice'}`}
+        title="Subnetting trainer"
+      >
         <p>
           {mode === 'timed' ? (
             <>
-              Problem {timed.index + 1}/{TIMED_TOTAL} · Correct {timed.correct} ·{' '}
+              Problem {Math.min(timed.index + 1, TIMED_TOTAL)}/{TIMED_TOTAL} · Correct{' '}
+              {timed.correct} ·{' '}
               <span className={`exam-timer ${timed.secondsLeft < 60 ? 'low' : ''}`}>
                 {mm}:{ss}
               </span>
+              . Fill all fields, then Check.
             </>
           ) : (
             <>
-              Streak: {progress.subnet.streak || 0} · Best: {progress.subnet.bestStreak || 0} ·
-              Accuracy:{' '}
-              {accuracy(progress.subnet) != null ? `${accuracy(progress.subnet)}%` : '—'}
+              Streak {progress.subnet.streak || 0} · Best {progress.subnet.bestStreak || 0} ·
+              Accuracy {accuracy(progress.subnet) != null ? `${accuracy(progress.subnet)}%` : '—'}
               {progress.subnet.timedBest
                 ? ` · Timed best ${progress.subnet.timedBest.score}%`
                 : ''}
+              . Path goal: 15+ problems at ≥70%.
             </>
           )}
         </p>
-      </header>
+      </PageHeader>
 
       <div className="pill-row" style={{ marginBottom: '1rem' }}>
         <button
           type="button"
           className={`pill ${mode === 'practice' ? 'active' : ''}`}
-          onClick={() => setMode('practice')}
-          disabled={mode === 'timed'}
+          onClick={() => {
+            if (mode === 'timed' && !window.confirm('Leave timed run? Progress for this run is kept if you finished problems.')) return;
+            setMode('practice');
+          }}
         >
-          Practice
+          Practice (untimed)
         </button>
         <button
           type="button"
@@ -200,6 +209,9 @@ export default function SubnetDrill() {
         >
           Timed · {TIMED_TOTAL} in {TIMED_SECONDS / 60}m
         </button>
+        <Link className="pill" to="/sheets">
+          Subnet cheatsheet
+        </Link>
       </div>
 
       <div className="card">

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { QUESTIONS } from '../data/questions';
 import { DOMAINS } from '../data/domains';
-import { shuffle, pickN } from '../lib/shuffle';
+import { pickN } from '../lib/shuffle';
 import {
   loadProgress,
   recordQuizAnswer,
@@ -16,6 +16,8 @@ import { getWeakDomains } from '../lib/weakDomains';
 import { useChoiceKeys } from '../hooks/useChoiceKeys';
 import { prepareChoices } from '../lib/study';
 import { usePathVisit } from '../hooks/usePathVisit';
+import PageHeader from '../components/PageHeader';
+import SessionDone from '../components/SessionDone';
 
 function buildSet(domainFilter, count) {
   const pool =
@@ -28,49 +30,42 @@ function buildSet(domainFilter, count) {
   }));
 }
 
+function resolveDomain(paramDomain, paramMode) {
+  if (paramDomain && ['1', '2', '3', '4', '5'].includes(paramDomain)) return paramDomain;
+  if (paramMode === 'weak') {
+    const w = getWeakDomains(2).ranked[0];
+    return w ? String(w.id) : 'all';
+  }
+  return 'all';
+}
+
 export default function Quiz() {
   const [params, setParams] = useSearchParams();
   const paramDomain = params.get('domain');
-  const paramMode = params.get('mode'); // weak | normal
-  usePathVisit('mixed-quiz', paramDomain ? `quiz-d${paramDomain}` : 'quiz');
+  const paramMode = params.get('mode');
 
-  const [domain, setDomain] = useState(() => {
-    if (paramDomain && ['1', '2', '3', '4', '5'].includes(paramDomain)) return paramDomain;
-    if (paramMode === 'weak') {
-      const w = getWeakDomains(2).ranked[0];
-      return w ? String(w.id) : 'all';
-    }
-    return 'all';
-  });
+  const [domain, setDomain] = useState(() => resolveDomain(paramDomain, paramMode));
   const [count, setCount] = useState(10);
-  const [set, setSet] = useState(() => buildSet(domain, 10));
+  const [set, setSet] = useState(() => buildSet(resolveDomain(paramDomain, paramMode), 10));
   const [index, setIndex] = useState(0);
   const [picked, setPicked] = useState(null);
   const [session, setSession] = useState({ correct: 0, answered: 0, missedIds: [] });
   const [done, setDone] = useState(false);
   const [progress, setProgress] = useState(() => loadProgress());
+  const [dirtyFilters, setDirtyFilters] = useState(false);
 
-  // Apply URL domain when it changes (e.g. from dashboard link)
+  usePathVisit('mixed-quiz', paramDomain ? `quiz-d${paramDomain}` : 'quiz');
+
+  // URL domain changes (from coach deep links)
   useEffect(() => {
-    if (paramDomain && ['1', '2', '3', '4', '5'].includes(paramDomain)) {
-      setDomain(paramDomain);
-      const next = buildSet(paramDomain, count);
-      setSet(next);
-      setIndex(0);
-      setPicked(null);
-      setSession({ correct: 0, answered: 0, missedIds: [] });
-      setDone(false);
-    } else if (paramMode === 'weak') {
-      const w = getWeakDomains(2).ranked[0];
-      if (w) {
-        setDomain(String(w.id));
-        setSet(buildSet(String(w.id), count));
-        setIndex(0);
-        setPicked(null);
-        setSession({ correct: 0, answered: 0, missedIds: [] });
-        setDone(false);
-      }
-    }
+    const d = resolveDomain(paramDomain, paramMode);
+    setDomain(d);
+    setSet(buildSet(d, count));
+    setIndex(0);
+    setPicked(null);
+    setSession({ correct: 0, answered: 0, missedIds: [] });
+    setDone(false);
+    setDirtyFilters(false);
   }, [paramDomain, paramMode]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const current = set[index];
@@ -81,21 +76,31 @@ export default function Quiz() {
     return d ? `D${d.id} ${d.name}` : '';
   }, [domain]);
 
-  function start() {
-    setSet(buildSet(domain, count));
+  function applyAndStart(nextDomain = domain, nextCount = count) {
+    setSet(buildSet(nextDomain, nextCount));
     setIndex(0);
     setPicked(null);
     setSession({ correct: 0, answered: 0, missedIds: [] });
     setDone(false);
-    // Keep URL in sync for shareable weak-domain links
+    setDirtyFilters(false);
     const next = new URLSearchParams();
-    if (domain !== 'all') {
-      next.set('domain', domain);
-      markPathVisit(`quiz-d${domain}`);
+    if (nextDomain !== 'all') {
+      next.set('domain', nextDomain);
+      markPathVisit(`quiz-d${nextDomain}`);
     } else {
       markPathVisit('mixed-quiz');
     }
     setParams(next, { replace: true });
+  }
+
+  function changeDomain(d) {
+    setDomain(d);
+    setDirtyFilters(true);
+  }
+
+  function changeCount(n) {
+    setCount(n);
+    setDirtyFilters(true);
   }
 
   const select = useCallback(
@@ -168,13 +173,11 @@ export default function Quiz() {
     const learn = getLearnStats();
     return (
       <>
-        <header className="page-header">
-          <span className="eyebrow">Practice quiz</span>
-          <h1>Session complete</h1>
+        <PageHeader eyebrow="Practice quiz" title="Session complete">
           <p>
             {session.correct}/{session.answered} correct ({pct}%) · {domainLabel}
           </p>
-        </header>
+        </PageHeader>
         <div className="card" style={{ marginBottom: '1rem' }}>
           <div className="stat-row">
             <div className="stat">
@@ -195,33 +198,31 @@ export default function Quiz() {
             <div className="study-cta">
               <h3>Learn from this session</h3>
               <p className="muted">
-                You missed {session.missedIds.length} question
-                {session.missedIds.length === 1 ? '' : 's'}. Review them now while the explanation
-                is fresh — two correct in a row masters each item.
+                Review misses now (2 correct in a row masters each item), then return to the coach.
               </p>
-              <div className="btn-row">
-                <Link className="btn btn-primary" to="/review?session=1">
-                  Review these misses
-                </Link>
-                <Link className="btn" to="/review">
-                  Full miss bank
-                </Link>
-              </div>
             </div>
           ) : (
             <p className="muted" style={{ marginTop: '1rem' }}>
-              Clean run — nothing new added to the miss bank.
+              Clean run — nothing new in the miss bank. Nice work.
             </p>
           )}
 
-          <div className="btn-row">
-            <button type="button" className="btn" onClick={start}>
-              Run again
-            </button>
-            <Link className="btn" to="/">
-              Dashboard
-            </Link>
-          </div>
+          <SessionDone
+            primaryTo={session.missedIds.length > 0 ? '/review?session=1' : '/'}
+            primaryLabel={
+              session.missedIds.length > 0 ? 'Review these misses' : 'Back to coach'
+            }
+            secondaryTo={session.missedIds.length > 0 ? '/' : undefined}
+            secondaryLabel={session.missedIds.length > 0 ? 'Skip to coach' : undefined}
+            showCoach={session.missedIds.length > 0}
+            extra={
+              <div className="btn-row" style={{ marginBottom: '0.5rem' }}>
+                <button type="button" className="btn" onClick={() => applyAndStart()}>
+                  Run another set
+                </button>
+              </div>
+            }
+          />
         </div>
       </>
     );
@@ -229,21 +230,23 @@ export default function Quiz() {
 
   return (
     <>
-      <header className="page-header">
-        <span className="eyebrow">Domains 1–5 · {QUESTIONS.length} questions</span>
-        <h1>Practice quiz</h1>
+      <PageHeader eyebrow={`Domains 1–5 · ${QUESTIONS.length} questions`} title="Practice quiz">
         <p>
-          Wrong answers feed your miss bank. Keys: 1–4 select, Enter next. All-time accuracy:{' '}
+          Wrong answers go to your miss bank. Keys: <span className="mono">1–4</span> select,{' '}
+          <span className="mono">Enter</span> next. Accuracy:{' '}
           {accuracy(progress.quiz) != null ? `${accuracy(progress.quiz)}%` : '—'}
         </p>
-      </header>
+      </PageHeader>
 
       <div className="card" style={{ marginBottom: '1rem' }}>
+        <p className="muted" style={{ margin: '0 0 0.65rem', fontSize: '0.88rem' }}>
+          Pick domain and length, then start. Changing filters mid-set needs a new set.
+        </p>
         <div className="pill-row">
           <button
             type="button"
             className={`pill ${domain === 'all' ? 'active' : ''}`}
-            onClick={() => setDomain('all')}
+            onClick={() => changeDomain('all')}
           >
             All
           </button>
@@ -252,7 +255,7 @@ export default function Quiz() {
               key={d.id}
               type="button"
               className={`pill ${domain === String(d.id) ? 'active' : ''}`}
-              onClick={() => setDomain(String(d.id))}
+              onClick={() => changeDomain(String(d.id))}
             >
               D{d.id}
             </button>
@@ -264,15 +267,22 @@ export default function Quiz() {
               key={n}
               type="button"
               className={`pill ${count === n ? 'active' : ''}`}
-              onClick={() => setCount(n)}
+              onClick={() => changeCount(n)}
             >
               {n} Q
             </button>
           ))}
         </div>
+        {dirtyFilters && (
+          <p className="filter-warn">Filters changed — start a new set to apply them.</p>
+        )}
         <div className="btn-row">
-          <button type="button" className="btn" onClick={start}>
-            New set ({domainLabel}, {count} Q)
+          <button
+            type="button"
+            className={`btn ${dirtyFilters ? 'btn-primary' : ''}`}
+            onClick={() => applyAndStart()}
+          >
+            {dirtyFilters ? 'Start new set with these filters' : `Restart set (${domainLabel}, ${count} Q)`}
           </button>
           <Link className="btn btn-ghost" to="/review">
             Review misses
@@ -282,7 +292,7 @@ export default function Quiz() {
 
       {current && (
         <div className="card">
-          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
             <span className="eyebrow">
               Question {index + 1}/{set.length} · Domain {current.domain}
               {current.objective ? ` · ${current.objective}` : ''}
@@ -326,6 +336,7 @@ export default function Quiz() {
           <div className="btn-row">
             <button type="button" className="btn btn-primary" disabled={!picked} onClick={next}>
               {index + 1 >= set.length ? 'Finish' : 'Next'}
+              {picked ? ' · Enter' : ''}
             </button>
           </div>
         </div>

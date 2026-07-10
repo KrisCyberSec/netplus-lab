@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { CHEATSHEETS } from '../data/cheatsheets';
 import { usePathVisit } from '../hooks/usePathVisit';
+import PageHeader from '../components/PageHeader';
 
 export default function Cheatsheets() {
   usePathVisit('sheets-ports', 'sheets');
@@ -9,14 +10,12 @@ export default function Cheatsheets() {
 
   return (
     <>
-      <header className="page-header">
-        <span className="eyebrow">Quick reference</span>
-        <h1>Cheatsheets</h1>
+      <PageHeader eyebrow="Quick reference" title="Cheatsheets">
         <p>
-          High-yield tables for ports, subnet math, cabling, Wi-Fi, OSI, and the troubleshooting
-          methodology. Great for last-minute review.
+          High-yield tables for last-minute review. Opening this once counts toward the path
+          “skim cheatsheets” step. Use alongside drills — not instead of practice.
         </p>
-      </header>
+      </PageHeader>
 
       <div className="pill-row" style={{ marginBottom: '1rem' }}>
         {CHEATSHEETS.map((s) => (

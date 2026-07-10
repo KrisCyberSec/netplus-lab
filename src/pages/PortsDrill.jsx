@@ -3,6 +3,8 @@ import { PORTS } from '../data/ports';
 import { shuffle } from '../lib/shuffle';
 import { loadProgress, recordResult, accuracy } from '../lib/progress';
 import { usePathVisit } from '../hooks/usePathVisit';
+import { useChoiceKeys } from '../hooks/useChoiceKeys';
+import PageHeader from '../components/PageHeader';
 
 function buildRound() {
   const item = PORTS[Math.floor(Math.random() * PORTS.length)];
@@ -36,15 +38,28 @@ export default function PortsDrill() {
     setSeconds(0);
   }, []);
 
-  function select(choice) {
-    if (picked != null) return;
-    const correct =
-      round.mode === 'port-to-name'
-        ? choice === round.item.name
-        : Number(choice) === round.item.port;
-    setPicked({ choice, correct });
-    setProgress(recordResult('ports', { correct }));
-  }
+  const selectByIndex = useCallback(
+    (displayIndex) => {
+      if (picked != null) return;
+      const choice = round.choices[displayIndex];
+      if (choice == null) return;
+      const correct =
+        round.mode === 'port-to-name'
+          ? choice === round.item.name
+          : Number(choice) === round.item.port;
+      setPicked({ choice, correct });
+      setProgress(recordResult('ports', { correct }));
+    },
+    [picked, round],
+  );
+
+  useChoiceKeys({
+    choiceCount: round.choices.length,
+    onSelect: selectByIndex,
+    onNext: next,
+    enabled: true,
+    answered: picked != null,
+  });
 
   const prompt =
     round.mode === 'port-to-name'
@@ -56,27 +71,32 @@ export default function PortsDrill() {
 
   return (
     <>
-      <header className="page-header">
-        <span className="eyebrow">Domain 1 · Lightning round</span>
-        <h1>Ports & protocols</h1>
+      <PageHeader eyebrow="Domain 1 · Lightning round" title="Ports & protocols">
         <p>
           Streak {progress.ports.streak || 0} · Best {progress.ports.bestStreak || 0} · Accuracy{' '}
-          {accuracy(progress.ports) != null ? `${accuracy(progress.ports)}%` : '—'} · Timer{' '}
-          <span className="timer">{seconds}s</span>
+          {accuracy(progress.ports) != null ? `${accuracy(progress.ports)}%` : '—'} ·{' '}
+          <span className="timer">{seconds}s</span> · Keys 1–4, Enter next
         </p>
-      </header>
+      </PageHeader>
 
       <div className="card">
         <div className="prompt-box">{prompt}</div>
         <div className="choice-list">
-          {round.choices.map((c) => {
+          {round.choices.map((c, i) => {
             let cls = 'choice';
             if (picked) {
               if (c === correctAnswer) cls += ' correct';
               else if (c === picked.choice && !picked.correct) cls += ' wrong';
             }
             return (
-              <button key={c} type="button" className={cls} disabled={!!picked} onClick={() => select(c)}>
+              <button
+                key={c}
+                type="button"
+                className={cls}
+                disabled={!!picked}
+                onClick={() => selectByIndex(i)}
+              >
+                <span className="key-hint">{i + 1}</span>
                 {c}
               </button>
             );
@@ -94,7 +114,7 @@ export default function PortsDrill() {
 
         <div className="btn-row">
           <button type="button" className="btn btn-primary" onClick={next}>
-            Next
+            Next{picked ? ' · Enter' : ''}
           </button>
         </div>
       </div>

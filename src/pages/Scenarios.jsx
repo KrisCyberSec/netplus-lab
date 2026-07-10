@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { SCENARIOS } from '../data/scenarios';
 import { loadProgress, recordScenario, recordLearnEvent, accuracy } from '../lib/progress';
 import { usePathVisit } from '../hooks/usePathVisit';
+import PageHeader from '../components/PageHeader';
 
 export default function Scenarios() {
   usePathVisit('scenarios');
@@ -35,15 +36,16 @@ export default function Scenarios() {
 
   return (
     <>
-      <header className="page-header">
-        <span className="eyebrow">Domain 5 · Scenarios</span>
-        <h1>Fault scenarios</h1>
+      <PageHeader eyebrow="Domain 5 · Scenarios" title="Fault scenarios">
         <p>
-          Read the symptoms, pick the most likely cause. Cleared:{' '}
-          {completed.size}/{SCENARIOS.length} · Accuracy{' '}
-          {accuracy(progress.scenarios) != null ? `${accuracy(progress.scenarios)}%` : '—'}
+          Read symptoms → pick the cause. Path goal: clear 8+ scenarios. Cleared {completed.size}/
+          {SCENARIOS.length}
+          {accuracy(progress.scenarios) != null
+            ? ` · Accuracy ${accuracy(progress.scenarios)}%`
+            : ''}
+          . Green numbers = answered correctly at least once.
         </p>
-      </header>
+      </PageHeader>
 
       <div className="pill-row" style={{ marginBottom: '1rem' }}>
         {SCENARIOS.map((s, i) => (

@@ -3,6 +3,7 @@ import { OSI_LAYERS, OSI_QUIZ } from '../data/osi';
 import { shuffle } from '../lib/shuffle';
 import { loadProgress, recordResult, accuracy } from '../lib/progress';
 import { usePathVisit } from '../hooks/usePathVisit';
+import PageHeader from '../components/PageHeader';
 
 export default function OsiMap() {
   usePathVisit('osi');
@@ -25,14 +26,13 @@ export default function OsiMap() {
 
   return (
     <>
-      <header className="page-header">
-        <span className="eyebrow">Domain 1 · Interactive</span>
-        <h1>OSI model map</h1>
+      <PageHeader eyebrow="Domain 1 · Interactive" title="OSI model map">
         <p>
-          Explore each layer, then lock in with quick layer ID quizzes. Accuracy:{' '}
-          {accuracy(progress.osi) != null ? `${accuracy(progress.osi)}%` : '—'}
+          Tap a layer to study it, then use the quiz below. Path goal: 5+ quiz answers at ≥70%.
+          Accuracy: {accuracy(progress.osi) != null ? `${accuracy(progress.osi)}%` : '—'} (
+          {progress.osi?.attempted || 0} answered)
         </p>
-      </header>
+      </PageHeader>
 
       <div className="grid-2">
         <div className="card">

@@ -12,6 +12,8 @@ import { buildMissReviewSet, buildSessionMissSet, prepareChoices } from '../lib/
 import { DOMAINS } from '../data/domains';
 import { useChoiceKeys } from '../hooks/useChoiceKeys';
 import { usePathVisit } from '../hooks/usePathVisit';
+import PageHeader from '../components/PageHeader';
+import SessionDone from '../components/SessionDone';
 
 function wrapSet(raw) {
   return raw.map((q) => ({ ...q, choices: prepareChoices(q) }));
@@ -111,30 +113,26 @@ export default function ReviewMisses() {
   if (set.length === 0 && !done) {
     return (
       <>
-        <header className="page-header">
-          <span className="eyebrow">Study loop</span>
-          <h1>Review misses</h1>
+        <PageHeader eyebrow="Study loop" title="Review misses">
           <p>
-            Nothing in your miss bank yet. Misses from practice quizzes and mock exams show up
-            here so you can re-drill until they stick (2 correct in a row masters an item).
+            Nothing here yet. Wrong answers from quizzes and mocks land in this bank. Get each
+            item right <strong>twice in a row</strong> to master it.
           </p>
-        </header>
+        </PageHeader>
         <div className="card">
-          <h2>How learning works here</h2>
+          <h2>How to fill the bank</h2>
           <ol className="how-list">
-            <li>Answer quizzes or mock exams as usual.</li>
-            <li>Every wrong answer is saved to your personal miss bank (local only).</li>
-            <li>Review here. Get it right twice in a row to mark it mastered.</li>
-            <li>Dashboard tracks active misses by domain so you know what to study.</li>
+            <li>Take a practice quiz or mock exam.</li>
+            <li>Misses are saved automatically (this browser only).</li>
+            <li>Come back here and re-drill until mastered.</li>
+            <li>Then return to the coach for the next path step.</li>
           </ol>
-          <div className="btn-row">
-            <Link className="btn btn-primary" to="/quiz">
-              Practice quiz
-            </Link>
-            <Link className="btn" to="/mock">
-              Mock exam
-            </Link>
-          </div>
+          <SessionDone
+            primaryTo="/quiz"
+            primaryLabel="Practice quiz"
+            secondaryTo="/mock"
+            secondaryLabel="Mock exam"
+          />
         </div>
       </>
     );
@@ -147,30 +145,32 @@ export default function ReviewMisses() {
     const remaining = getLearnStats().activeCount;
     return (
       <>
-        <header className="page-header">
-          <span className="eyebrow">Review complete</span>
-          <h1>
-            {session.correct}/{session.answered} ({pct}%)
-          </h1>
+        <PageHeader eyebrow="Review complete" title={`${session.correct}/${session.answered} (${pct}%)`}>
           <p>
             {session.masteredNow > 0
               ? `Mastered ${session.masteredNow} item(s) this round. `
-              : 'Keep going — items master after 2 correct in a row. '}
+              : 'Items master after 2 correct in a row. '}
             {remaining} still active in your miss bank.
           </p>
-        </header>
+        </PageHeader>
         <div className="card">
           <div className="btn-row">
-            <button type="button" className="btn btn-primary" onClick={startAll} disabled={remaining === 0}>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={startAll}
+              disabled={remaining === 0}
+            >
               Review more misses
             </button>
-            <Link className="btn" to="/quiz">
-              Mixed practice
-            </Link>
-            <Link className="btn" to="/">
-              Dashboard
-            </Link>
           </div>
+          <SessionDone
+            primaryTo="/"
+            primaryLabel="Back to coach"
+            secondaryTo="/quiz"
+            secondaryLabel="Mixed practice"
+            showCoach={false}
+          />
         </div>
       </>
     );
@@ -178,15 +178,13 @@ export default function ReviewMisses() {
 
   return (
     <>
-      <header className="page-header">
-        <span className="eyebrow">Study loop · Learn from mistakes</span>
-        <h1>Review misses</h1>
+      <PageHeader eyebrow="Study loop · Learn from mistakes" title="Review misses">
         <p>
-          Active misses: {stats.activeCount} · Mastered: {stats.masteredCount}
-          {sessionOnly ? ' · Showing last session only' : ''}
+          Active: {stats.activeCount} · Mastered: {stats.masteredCount}
+          {sessionOnly ? ' · Last session only' : ''}
           . Keys: 1–4, Enter next.
         </p>
-      </header>
+      </PageHeader>
 
       <div className="card study-banner" style={{ marginBottom: '1rem' }}>
         <div className="stat-row">

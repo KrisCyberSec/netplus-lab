@@ -1,13 +1,15 @@
-import { NavLink, Outlet } from 'react-router-dom';
+import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { DRILL_META } from '../data/domains';
 import { getLearnStats, loadProgress } from '../lib/progress';
-import { useMemo } from 'react';
+import { getPathStatus } from '../lib/coach';
+import { useEffect, useMemo, useState } from 'react';
+import ScrollToTop from './ScrollToTop';
 
 const LEARN = ['home', 'path', 'review'];
 const PRACTICE = ['subnet', 'ports', 'osi', 'quiz', 'mock', 'scenarios', 'tools'];
 const REF = ['sheets', 'coverage'];
 
-function NavSection({ title, keys, badgeFor }) {
+function NavSection({ title, keys, badgeFor, onNavigate }) {
   return (
     <div className="nav-section">
       <div className="nav-section-label">{title}</div>
@@ -21,6 +23,7 @@ function NavSection({ title, keys, badgeFor }) {
             to={item.path}
             end={key === 'home'}
             className={({ isActive }) => (isActive ? 'active' : undefined)}
+            onClick={onNavigate}
           >
             <span className="nav-icon">{item.icon}</span>
             <span className="nav-label">{item.label}</span>
@@ -33,17 +36,58 @@ function NavSection({ title, keys, badgeFor }) {
 }
 
 export default function Layout() {
-  const missCount = useMemo(() => {
+  const location = useLocation();
+  const [navOpen, setNavOpen] = useState(false);
+
+  // Recompute on every route change so badges stay fresh
+  const { missCount, pathPercent } = useMemo(() => {
     try {
       loadProgress();
-      return getLearnStats().activeCount;
+      const learn = getLearnStats();
+      const path = getPathStatus();
+      return { missCount: learn.activeCount, pathPercent: path.percent };
     } catch {
-      return 0;
+      return { missCount: 0, pathPercent: 0 };
     }
-  }, []);
+  }, [location.pathname, location.search]);
+
+  useEffect(() => {
+    setNavOpen(false);
+  }, [location.pathname]);
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell ${navOpen ? 'nav-open' : ''}`}>
+      <ScrollToTop />
+      <header className="mobile-bar">
+        <button
+          type="button"
+          className="btn mobile-menu-btn"
+          aria-expanded={navOpen}
+          aria-label={navOpen ? 'Close menu' : 'Open menu'}
+          onClick={() => setNavOpen((o) => !o)}
+        >
+          {navOpen ? 'Close' : 'Menu'}
+        </button>
+        <NavLink to="/" className="mobile-brand" onClick={() => setNavOpen(false)}>
+          <strong>NetPlus Lab</strong>
+          <span>Coach · {pathPercent}% path</span>
+        </NavLink>
+        {missCount > 0 && (
+          <NavLink to="/review" className="mobile-miss" onClick={() => setNavOpen(false)}>
+            {missCount} misses
+          </NavLink>
+        )}
+      </header>
+
+      {navOpen && (
+        <button
+          type="button"
+          className="nav-backdrop"
+          aria-label="Close menu"
+          onClick={() => setNavOpen(false)}
+        />
+      )}
+
       <aside className="sidebar">
         <div className="brand">
           <div className="brand-mark">N+</div>
@@ -52,17 +96,31 @@ export default function Layout() {
             <span>Personal coach</span>
           </div>
         </div>
+
+        <div className="sidebar-status">
+          <div className="sidebar-status-row">
+            <span>Path</span>
+            <strong className="mono">{pathPercent}%</strong>
+          </div>
+          <div className="progress-bar">
+            <span style={{ width: `${pathPercent}%` }} />
+          </div>
+          <p className="sidebar-status-hint">Saved in this browser only</p>
+        </div>
+
         <nav className="nav">
           <NavSection
             title="Learn"
             keys={LEARN}
             badgeFor={(key) => (key === 'review' ? missCount : null)}
+            onNavigate={() => setNavOpen(false)}
           />
-          <NavSection title="Practice" keys={PRACTICE} />
-          <NavSection title="Reference" keys={REF} />
+          <NavSection title="Practice" keys={PRACTICE} onNavigate={() => setNavOpen(false)} />
+          <NavSection title="Reference" keys={REF} onNavigate={() => setNavOpen(false)} />
         </nav>
         <p className="sidebar-hint">
-          Start on Home for “what next.” Progress saves automatically in this browser.
+          Start on <strong>Home · Coach</strong> for what to do next. After each session, review
+          misses, then return to the coach.
         </p>
       </aside>
       <main className="main">

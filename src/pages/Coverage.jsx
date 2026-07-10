@@ -6,6 +6,7 @@ import { TOOL_PROMPTS } from '../data/tools';
 import { EXAM_META } from '../data/objectives';
 import { coverageSummary } from '../lib/coverageAudit';
 import { useMemo } from 'react';
+import PageHeader from '../components/PageHeader';
 
 export default function Coverage() {
   const counts = countByDomain();
@@ -13,15 +14,12 @@ export default function Coverage() {
 
   return (
     <>
-      <header className="page-header">
-        <span className="eyebrow">N10-009 · Factual scope</span>
-        <h1>What this lab covers</h1>
+      <PageHeader eyebrow="N10-009 · Factual scope" title="What this lab covers">
         <p>
-          Mapped to CompTIA Network+ ({EXAM_META.code} / {EXAM_META.version}) topic areas from
-          CompTIA’s public objectives summary. This is a study aid — not a full course, not
-          official CompTIA material, and not a guarantee of exam completeness.
+          Mapped to CompTIA Network+ ({EXAM_META.code} / {EXAM_META.version}). Study aid only —
+          not official CompTIA material. Use the official objectives PDF as the final checklist.
         </p>
-      </header>
+      </PageHeader>
 
       <div className="card" style={{ marginBottom: '1rem' }}>
         <h2>Exam facts (official outline)</h2>
