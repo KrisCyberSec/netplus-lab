@@ -37,8 +37,9 @@ It **is** aligned to CompTIA’s published V9 topic summary and uses standard, f
 
 ## Inventory (see app Coverage page for live counts)
 
-- Quiz bank: base + extra + N10-009 expansion (`questions*.js`)
-- Drills: subnet, ports, OSI, tools, scenarios, mock, cheatsheets
+- Quiz bank: base + extra + N10-009 expansion (`questions*.js`) — 200+ items after v0.8 partial-topic fill
+- Drills: subnet, ports, OSI, tools, scenarios, multi-step PBQ-style, mock, cheatsheets
+- Scenarios rebalanced across domains (not D5-only)
 - Study path + miss bank for learning loop
 
 ## How we keep content factual
@@ -51,4 +52,6 @@ It **is** aligned to CompTIA’s published V9 topic summary and uses standard, f
 
 ## Gaps to watch
 
-Open Coverage in the app: any topic with **Thin (0 Q)** still needs more items, even if a drill touches it. Prioritize those for the next content pass.
+Open Coverage in the app: any topic with **Thin (0 Q)** or **Partial (1–2 Q)** still needs more items, even if a drill touches it.
+
+As of v0.8, all 33 mapped topics are **Strong (3+ quiz items)**. Next growth areas are multi-step variety, scenario freshness after heavy use, and optional specialized drills (IPv6 trainer, VLAN lab) — not empty objective cells.

@@ -16,15 +16,26 @@ Guided study path, coach suggestions, subnetting, ports, OSI, quizzes, mock exam
 
 ### Run locally
 
+Fastest local path (idempotent — reuses a running server if already up, then opens the browser):
+
+```bash
+npm run open
+# → http://127.0.0.1:5173
+```
+
+Or the classic Vite workflow:
+
 ```bash
 npm install
 npm run dev
-# → http://localhost:5173
+# → http://127.0.0.1:5173 (browser opens automatically)
 ```
 
 ```bash
 npm run build && npm run preview
 ```
+
+**Just want to study?** Use the live demo above — no install, no wait.
 
 ---
 
@@ -35,7 +46,7 @@ npm run build && npm run preview
 | **Subnetting trainer** | Mask, broadcast, host range, usable hosts from CIDR |
 | **Port lightning round** | High-yield TCP/UDP ports and services |
 | **OSI map** | Interactive layers + quick layer ID quiz |
-| **Practice quiz** | 160+ questions mapped to N10-009 topic areas |
+| **Practice quiz** | 200+ questions mapped to N10-009 topic areas |
 | **Study loop / Review misses** | Wrong answers saved; re-drill until mastered (2 in a row) |
 | **Mock exam** | Timed 20/40/60, domain-weighted, then review misses |
 | **Fault scenarios** | “What’s wrong?” troubleshooting cases |
@@ -101,6 +112,7 @@ docs/
 
 | Command | Description |
 |---------|-------------|
+| `npm run open` | Start (or reuse) dev server and open browser |
 | `npm run dev` | Local dev server |
 | `npm run build` | Production build to `dist/` |
 | `npm run preview` | Preview production build |

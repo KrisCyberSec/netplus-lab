@@ -36,7 +36,7 @@ export default function Scenarios() {
 
   return (
     <>
-      <PageHeader eyebrow="Domain 5 · Scenarios" title="Fault scenarios">
+      <PageHeader eyebrow="Multi-domain · Scenarios" title="Fault scenarios">
         <p>
           Read symptoms → pick the cause. Path goal: clear 8+ scenarios. Cleared {completed.size}/
           {SCENARIOS.length}

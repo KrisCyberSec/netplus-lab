@@ -1,4 +1,4 @@
-/** Troubleshooting scenario cards — Domain 5 hero content. */
+/** Scenario cards — multi-domain “what’s wrong?” cases (D5 heavy historically; D1–D4 expanded). */
 export const SCENARIOS = [
   {
     id: 's1',
@@ -317,5 +317,247 @@ export const SCENARIOS = [
     ],
     answer: 0,
     explain: 'Logical/physical docs plus config backups and baselines cut MTTR dramatically.',
+  },
+
+  // --- v0.8 rebalance: more D1–D4 scenarios ---
+  {
+    id: 's21',
+    domain: 1,
+    title: 'Wrong glass, no light',
+    symptoms:
+      'A tech installs a new uplink. The switch port is SFP+ for single-mode LC. They inserted a multimode SR optic into a long OS2 run. Link stays down; DOM shows no usable light.',
+    question: 'What concept was mismatched?',
+    choices: [
+      'Transceiver / fiber type (SMF vs MMF optics and plant)',
+      'DNS TTL only',
+      'WPA3 passphrase length',
+      'SMTP banner',
+    ],
+    answer: 0,
+    explain: 'Optics, connectors, and fiber plant must match mode, wavelength, and distance class.',
+  },
+  {
+    id: 's22',
+    domain: 1,
+    title: 'Everyone hears everything',
+    symptoms:
+      'A small office grew by daisy-chaining cheap hubs. One chatty device floods the segment; everyone’s NICs spike and apps time out. A modern switch is available in the closet unused.',
+    question: 'What topology/device change best contains the problem?',
+    choices: [
+      'Replace hubs with a switch to create separate collision domains per port',
+      'Add more hubs in a bigger ring',
+      'Disable all IP addresses',
+      'Force every host to the same MAC address',
+    ],
+    answer: 0,
+    explain: 'Switches isolate collision domains; hubs share one big collision domain and amplify chatter.',
+  },
+  {
+    id: 's23',
+    domain: 1,
+    title: 'Cloud “private” that isn’t',
+    symptoms:
+      'A team spun up cloud VMs and opened the database security group to 0.0.0.0/0 “just for testing.” The VPC has no bastion and no private subnets for data tiers.',
+    question: 'Which cloud networking concept was skipped?',
+    choices: [
+      'Segmentation with private subnets / tight security-group (NSG) rules',
+      'Using only copper DAC in the region',
+      'Disabling all IAM',
+      'Replacing DNS with static hosts files on the Internet',
+    ],
+    answer: 0,
+    explain: 'Cloud designs still need private tiers and least-privilege network rules — not wide-open SG/NSGs.',
+  },
+  {
+    id: 's24',
+    domain: 2,
+    title: 'LAG that isn’t',
+    symptoms:
+      'Two uplinks between access and distribution are plugged in for redundancy. Spanning tree blocks one. Throughput never exceeds a single link. Neither side has LACP configured.',
+    question: 'What is missing for active-active bandwidth?',
+    choices: [
+      'A link aggregation group (e.g. LACP) on both ends',
+      'A longer DHCP lease',
+      'Disabling all VLANs',
+      'Static APIPA on the uplink',
+    ],
+    answer: 0,
+    explain: 'Without EtherChannel/LACP, STP treats parallel links as a loop and blocks one.',
+  },
+  {
+    id: 's25',
+    domain: 2,
+    title: 'PoE math fails',
+    symptoms:
+      'A new closet switch advertises PoE+. After adding a dozen cameras and APs, random devices reboot. The switch log shows power budget exceeded; some ports disabled power.',
+    question: 'Root cause?',
+    choices: [
+      'PoE power budget / planning insufficient for connected PDs',
+      'DNS secondary missing',
+      'Wrong BGP AS only',
+      'SMTP relay full',
+    ],
+    answer: 0,
+    explain: 'PoE switches have finite watts; oversubscription drops or reboots powered devices.',
+  },
+  {
+    id: 's26',
+    domain: 2,
+    title: 'SSID works, apps don’t',
+    symptoms:
+      'Corporate SSID uses WPA3-Enterprise. Guests use an open captive-portal SSID on the same AP. A user joins the guest SSID by habit and cannot reach file servers that require domain auth on the corp VLAN.',
+    question: 'What is the most accurate explanation?',
+    choices: [
+      'They are on the isolated guest WLAN/VLAN by design',
+      'WPA3 always blocks file servers even on corp SSID',
+      'The core has no power',
+      'IPv6 ULA is required for SMB',
+    ],
+    answer: 0,
+    explain: 'Guest networks are segmented; connecting to the wrong SSID yields expected isolation.',
+  },
+  {
+    id: 's27',
+    domain: 2,
+    title: 'OSPF neighbors silent',
+    symptoms:
+      'Two routers share a /30 on a point-to-point link. OSPF is enabled on both, but no adjacency forms. ACLs on the path block protocol 89. Ping between the /30 addresses works.',
+    question: 'What is blocking the adjacency?',
+    choices: [
+      'ACL filtering OSPF (IP protocol 89) between neighbors',
+      'Missing default gateway on a PC in another building',
+      'Wrong Wi-Fi channel',
+      'Expired DHCP lease on a printer',
+    ],
+    answer: 0,
+    explain: 'ICMP success does not mean routing-protocol packets are allowed — check ACLs for OSPF.',
+  },
+  {
+    id: 's28',
+    domain: 3,
+    title: 'Certs expired everywhere',
+    symptoms:
+      'After a long holiday, VPN and 802.1X suddenly fail for many users. Clocks on several switches show 2019. NTP was pointed at an internal server that was decommissioned.',
+    question: 'What operational service failed?',
+    choices: [
+      'Time sync (NTP) — bad clocks break cert/auth validity',
+      'Cable category rating only',
+      'Fiber polish angle only',
+      'SMTP banner grammar',
+    ],
+    answer: 0,
+    explain: 'Auth and certificates depend on accurate time; monitor and redundant NTP sources matter.',
+  },
+  {
+    id: 's29',
+    domain: 3,
+    title: 'Community string nostalgia',
+    symptoms:
+      'Monitoring can read every router with SNMPv2c community “public.” An intern scans the management VLAN and pulls full configs via poorly controlled read-write strings on old gear.',
+    question: 'What should operations fix first?',
+    choices: [
+      'SNMP hardening: strong creds/version (prefer v3), least privilege, management ACLs',
+      'Disable all monitoring forever',
+      'Use hubs for the management VLAN',
+      'Publish community strings on the wiki homepage',
+    ],
+    answer: 0,
+    explain: 'Legacy SNMPv2c with default strings is a classic ops/security debt item.',
+  },
+  {
+    id: 's30',
+    domain: 3,
+    title: 'Friday night special',
+    symptoms:
+      'An engineer pushes an untested ACL during peak hours with no ticket. Traffic black-holes. No recent config backup exists on the jump host.',
+    question: 'Which practices were skipped?',
+    choices: [
+      'Change management, maintenance windows, and configuration backups',
+      'Using LC instead of SC connectors',
+      'Enabling more broadcast storms',
+      'Removing all documentation on purpose',
+    ],
+    answer: 0,
+    explain: 'Change control + backups turn scary incidents into recoverable rollbacks.',
+  },
+  {
+    id: 's31',
+    domain: 4,
+    title: 'Helpful IT email',
+    symptoms:
+      'Users receive a polished email: “Re-auth your VPN or access will be removed” with a lookalike domain. Several enter passwords. Hours later, unusual VPN sessions appear from another country.',
+    question: 'What attack started the incident?',
+    choices: [
+      'Phishing leading to credential theft',
+      'Fiber macrobend',
+      'Duplex mismatch on a printer',
+      'MTU discovery only',
+    ],
+    answer: 0,
+    explain: 'Phishing steals identities; pair user training with MFA and anomaly detection.',
+  },
+  {
+    id: 's32',
+    domain: 4,
+    title: 'Password-only VPN',
+    symptoms:
+      'Remote access VPN allows username/password only. A reused password from a breach dumps list works. No device posture checks exist.',
+    question: 'Which control most directly reduces this risk?',
+    choices: [
+      'MFA (and preferably device/posture checks) on VPN',
+      'Longer copper patch cords',
+      'Disabling all firewalls',
+      'Putting VPN pools on the OT VLAN',
+    ],
+    answer: 0,
+    explain: 'MFA stops many password-only account takeovers for remote access.',
+  },
+  {
+    id: 's33',
+    domain: 4,
+    title: 'MAC flood free-for-all',
+    symptoms:
+      'A compromised host floods thousands of source MACs into an access switch. The CAM table fills; the switch begins behaving like a hub and traffic is easier to sniff.',
+    question: 'Which defensive feature helps on the access port?',
+    choices: [
+      'Port security (limit learned MACs) / storm control where appropriate',
+      'Disabling STP everywhere',
+      'Open guest SSID on the same port',
+      'SNMPv2c community public on the port',
+    ],
+    answer: 0,
+    explain: 'Port security limits MAC learning; without it, CAM overflow enables promiscuous sniffing.',
+  },
+  {
+    id: 's34',
+    domain: 1,
+    title: 'Anycast DNS surprise',
+    symptoms:
+      'The company advertises the same DNS service address from multiple POPs so clients hit the nearest instance. A junior tech thinks duplicate IPs must mean a misconfiguration.',
+    question: 'What traffic type/pattern is this?',
+    choices: [
+      'Anycast — same prefix/service IP from multiple locations',
+      'Broadcast to 255.255.255.255 only',
+      'APIPA collision only',
+      'Layer-1 crossover cabling only',
+    ],
+    answer: 0,
+    explain: 'Anycast routes the same destination to the topologically nearest provider instance.',
+  },
+  {
+    id: 's35',
+    domain: 2,
+    title: 'Native VLAN mismatch',
+    symptoms:
+      'Two switches trunk successfully for most VLANs, but untagged traffic is mis-classified. Side A native VLAN 1; side B native VLAN 999. Intermittent weirdness for management.',
+    question: 'What should be aligned?',
+    choices: [
+      'Native (untagged) VLAN on both ends of the trunk',
+      'DHCP scope names only',
+      'Wi-Fi country code only',
+      'SMTP banner only',
+    ],
+    answer: 0,
+    explain: 'Native VLAN mismatches cause untagged frames to land in different VLANs — a classic trunk footgun.',
   },
 ];
